@@ -8,19 +8,19 @@ const GameBoard = () => {
     const createGrid = (): Grid => Array(ROWS).fill(null).map(() => Array(COLS).fill({ filled: 0 }));
 
     const calcCenter = () => {
-        const tetromino = activeTetromino;
+        const tetromino = activeTetromino.current;
         const width = tetromino[0].length;
         return Math.floor((COLS - width + 1) / 2);
     };
 
     const [grid, setGrid] = useState(createGrid());
-    const [activeTetromino, setActiveTetromino] = useState(tetrominoes["T"]);
 
+    const activeTetromino = useRef(tetrominoes["T"]);
     const positionRef = useRef({x: calcCenter(), y: 0});
     const gridRef = useRef(grid);
 
     const renderTetromino = () => {
-        const tetromino = activeTetromino;
+        const tetromino = activeTetromino.current;
         const width = tetromino[0].length;
         const height = tetromino.length;
         const newGrid = gridRef.current.map(row => row.map(cell => ({...cell})));
@@ -34,32 +34,18 @@ const GameBoard = () => {
         setGrid(newGrid);
     };
 
-    const removeTetromino = () => {
-        const tetromino = activeTetromino;
-        const width = tetromino[0].length;
-        const height = tetromino.length;
-        const newGrid = gridRef.current.map(row => row.map(cell => ({...cell})));
-        for (let i = 0; i < height; i++) {
-            for (let j = 0; j < width; j++) {
-                if (tetromino[i][j] !== 0) {
-                    newGrid[positionRef.current.y + i][positionRef.current.x + j].filled = 0;
-                }
-            }
-        }
-        setGrid(newGrid);
-    }
-
     const dropTetromino = () => {
         const nextPosition = {x: positionRef.current.x, y: positionRef.current.y + 1}
         if (canMove(nextPosition)) {
             positionRef.current = nextPosition;
         } else {
             placeTetromino();
+            setRandomTetromino();
         }
     };
 
     const placeTetromino = () => {
-        const tetromino = activeTetromino;
+        const tetromino = activeTetromino.current;
         const width = tetromino[0].length;
         const height = tetromino.length;
         const newGrid = gridRef.current.map(row => row.map(cell => ({...cell})));
@@ -77,7 +63,7 @@ const GameBoard = () => {
     }
 
     const canMove = (newPosition: Position) => {
-        const tetromino = activeTetromino;
+        const tetromino = activeTetromino.current;
         const width = tetromino[0].length;
         const height = tetromino.length;
         let newX, newY;
@@ -93,6 +79,12 @@ const GameBoard = () => {
         }
         return true;
     };
+
+    const setRandomTetromino = () => {
+        const keys = Object.keys(tetrominoes);
+        const randomKey = keys[Math.floor(Math.random() * keys.length)];
+        activeTetromino.current = tetrominoes[randomKey];
+    }
 
     useEffect(() => {
         // setInterval内のstateは初期値が保存されているためuseRefで対応する。
