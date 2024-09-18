@@ -1,6 +1,6 @@
 import { Tetrominoes } from "./types";
 
-export const ROWS = 20;
+export const ROWS = 10;
 export const COLS = 10;
 
 export const tetrominoes: Tetrominoes = {
