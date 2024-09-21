@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useEffect, useRef, useState } from "react";
+import { KeyboardEvent, use, useEffect, useRef, useState } from "react";
 import { ROWS, COLS, tetrominoes } from "../utils/constants";
 import { Grid, Position } from "../utils/types";
 
@@ -34,16 +34,6 @@ const GameBoard = () => {
         setGrid(newGrid);
     };
 
-    const dropTetromino = () => {
-        const nextPosition = {x: positionRef.current.x, y: positionRef.current.y + 1}
-        if (canMove(nextPosition)) {
-            positionRef.current = nextPosition;
-        } else {
-            placeTetromino();
-            setRandomTetromino();
-        }
-    };
-
     const placeTetromino = () => {
         const tetromino = activeTetromino.current;
         const width = tetromino[0].length;
@@ -72,37 +62,84 @@ const GameBoard = () => {
                 newY = newPosition.y + i;
                 newX = newPosition.x + j;
                 // refを参照して置かれたミノとの衝突を確認する
-                if (newY >= ROWS || gridRef.current[newY][newX].filled) {
+                if (newY >= ROWS || 
+                    newX <= -1 ||
+                    newX >= COLS ||
+                    gridRef.current[newY][newX].filled) {
                     return false;
                 }
             }
         }
         return true;
     };
-
+    
     const setRandomTetromino = () => {
         const keys = Object.keys(tetrominoes);
         const randomKey = keys[Math.floor(Math.random() * keys.length)];
         activeTetromino.current = tetrominoes[randomKey];
     }
-
+    
+        const moveTetromino = (direction: string) => {
+            let nextPosition;
+            if (direction === "left") {
+                nextPosition = {x: positionRef.current.x - 1, y: positionRef.current.y};
+                if (canMove(nextPosition)) {
+                    positionRef.current = nextPosition;
+                    renderTetromino();
+                }
+            } else if (direction === "right") {
+                nextPosition = {x: positionRef.current.x + 1, y: positionRef.current.y};
+                if (canMove(nextPosition)) {
+                    positionRef.current = nextPosition;
+                    renderTetromino();
+                }
+            }else if (direction === "down") {
+                nextPosition = {x: positionRef.current.x, y: positionRef.current.y + 1};
+                if (canMove(nextPosition)) {
+                    positionRef.current = nextPosition;
+                } else {
+                    placeTetromino();
+                    setRandomTetromino();
+                }
+                renderTetromino();
+            }
+        }
+    
     useEffect(() => {
         // setInterval内のstateは初期値が保存されているためuseRefで対応する。
         renderTetromino();
         const interval = setInterval(() => {
-            dropTetromino();
-            renderTetromino();
+            moveTetromino("down");
         }, 500);
         return () => clearInterval(interval);
     }, []);
 
+    useEffect(() => {
+        const handleKeyPress = (e: KeyboardEventInit) => {
+            if (e.key === "ArrowLeft") {
+                moveTetromino("left");
+            } else if (e.key === "ArrowRight") {
+                moveTetromino("right");
+            } else if (e.key === "ArrowDown") {
+                moveTetromino("down");
+            }
+        }
+        window.addEventListener("keydown", handleKeyPress);
+        return () => {
+            window.removeEventListener("keydown", handleKeyPress);
+        }
+    });
+
     return (
         <div>
             <button>おす</button>
-            {grid.map(row => (
-                <div>
-                    {row.map(cell => (
-                        <span>{cell.filled}</span>
+            {grid.map((row, rowIndex) => (
+                <div key={rowIndex} className="flex">
+                    {row.map((cell, cellIndex) => (
+                        <span
+                            key={cellIndex}
+                            className={`inline-block w-3 h-3 ${cell.filled? "bg-sky-500": "bg-white"} border-black border`}>
+                        </span>
                     ))}
                 </div>
             ))}
