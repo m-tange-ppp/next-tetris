@@ -1,7 +1,7 @@
 import { Tetrominoes } from "./types";
 
 export const ROWS = 20;
-export const COLS = 10;
+export const COLS = 6;
 
 export const tetrominoes: Tetrominoes = {
     I: [

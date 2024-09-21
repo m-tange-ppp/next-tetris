@@ -5,7 +5,7 @@ const Home: NextPage = () => {
   return (
     <div>
       <h1>Tetris</h1>
-      <GameBoard/>
+        <GameBoard/>
     </div>
   )
 }
