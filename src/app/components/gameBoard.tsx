@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { ROWS, COLS, tetrominoes } from "../utils/constants";
-import { Grid, Position, Shape, Tetrominoes } from "../utils/types";
+import { Grid, Position, Shape } from "../utils/types";
 
 const GameBoard = () => {
     const createGrid = (): Grid => Array(ROWS).fill(null).map(() => Array(COLS).fill({ filled: 0 }));
@@ -140,6 +140,32 @@ const GameBoard = () => {
             }
         }
     };
+
+    const canRotate = () => {};
+
+    const rotateTetromino = (direction: string) => {
+        const tetromino: Shape = activeTetromino.current;
+        const width: number = tetromino[0].length;
+        const height: number = tetromino.length;
+        const rotated: Shape = [];
+        if (direction === "left") {
+            for (let i = 0; i < width; i++) {
+                rotated[i] = [];
+                for (let j = 0; j < height; j++) {
+                    rotated[i][j] = tetromino[j][width - 1 - i];
+                }
+            }
+        } else {
+            for (let i = 0; i < width; i++) {
+                rotated[i] = [];
+                for (let j = 0; j < height; j++) {
+                    rotated[i][j] = tetromino[height - 1 - j][i];
+                }
+            }
+        }
+        activeTetromino.current = rotated;
+        renderTetromino();
+    };
     
     useEffect(() => {
         // setInterval内のstateは初期値が保存されているためuseRefで対応する。
@@ -159,12 +185,18 @@ const GameBoard = () => {
 
     useEffect(() => {
         const handleKeyPress = (e: KeyboardEventInit) => {
-            if (e.key === "ArrowLeft") {
-                moveTetromino("left");
-            } else if (e.key === "ArrowRight") {
-                moveTetromino("right");
-            } else if (e.key === "ArrowDown") {
-                moveTetromino("down");
+            if (!existFullRowsRef.current) {
+                if (e.key === "ArrowLeft") {
+                    moveTetromino("left");
+                } else if (e.key === "ArrowRight") {
+                    moveTetromino("right");
+                } else if (e.key === "ArrowDown") {
+                    moveTetromino("down");
+                } else if (e.key === "z") {
+                    rotateTetromino("left");
+                } else if (e.key === "x") {
+                    rotateTetromino("right");
+                }
             }
         }
         window.addEventListener("keydown", handleKeyPress);
