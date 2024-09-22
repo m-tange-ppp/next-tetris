@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { ROWS, COLS, tetrominoes } from "../utils/constants";
 import { Grid, Position, Shape } from "../utils/types";
+import { render } from "react-dom";
 
 const GameBoard = () => {
     const createGrid = (): Grid => Array(ROWS).fill(null).map(() => Array(COLS).fill({ filled: 0 }));
@@ -13,10 +14,19 @@ const GameBoard = () => {
         return Math.floor((COLS - width + 1) / 2);
     };
 
+    const calcTop = (): number => {
+        const tetromino: Shape = activeTetromino.current;
+        let top: number = 0;
+        if (tetromino[0].every(cell => cell === 0)) {
+            top -= 1;
+        }
+        return top;
+    };
+
     const [grid, setGrid] = useState(createGrid());
 
     const activeTetromino = useRef(tetrominoes["T"]);
-    const positionRef = useRef({x: calcCenter(), y: 0});
+    const positionRef = useRef({x: calcCenter(), y: calcTop()});
     const gridRef = useRef(grid);
     const existFullRowsRef = useRef(false);
 
@@ -52,8 +62,7 @@ const GameBoard = () => {
         setGrid(newGrid);
     };
 
-    const canMove = (newPosition: Position) => {
-        const tetromino: Shape = activeTetromino.current;
+    const canMove = (tetromino: Shape, newPosition: Position) => {
         const width: number = tetromino[0].length;
         const height: number = tetromino.length;
         let newX, newY;
@@ -104,30 +113,31 @@ const GameBoard = () => {
     };
 
     const initTetromino = () => {
-        positionRef.current = {x: calcCenter(), y: 0};
         setRandomTetromino();
-    }
+        positionRef.current = {x: calcCenter(), y: calcTop()};
+    };
 
     const moveTetromino = (direction: string) => {
         let nextPosition;
         if (direction === "left") {
             nextPosition = {x: positionRef.current.x - 1, y: positionRef.current.y};
-            if (canMove(nextPosition)) {
+            if (canMove(activeTetromino.current, nextPosition)) {
                 positionRef.current = nextPosition;
                 renderTetromino();
             }
         } else if (direction === "right") {
             nextPosition = {x: positionRef.current.x + 1, y: positionRef.current.y};
-            if (canMove(nextPosition)) {
+            if (canMove(activeTetromino.current, nextPosition)) {
                 positionRef.current = nextPosition;
                 renderTetromino();
             }
         }else if (direction === "down") {
             nextPosition = {x: positionRef.current.x, y: positionRef.current.y + 1};
-            if (canMove(nextPosition)) {
+            if (canMove(activeTetromino.current, nextPosition)) {
                 positionRef.current = nextPosition;
                 renderTetromino();
             } else {
+                // ここから切り出したい
                 placeTetromino();
                 const fullRows: number[] = checkFullRows();
                 if (fullRows.length > 0) {
@@ -135,13 +145,16 @@ const GameBoard = () => {
                     existFullRowsRef.current = true;
                 } else {
                     initTetromino();
-                    renderTetromino();
+                    if (checkGameOver()) {
+                        console.log("over");
+                        resetGameBoard();
+                    } else {
+                        renderTetromino();
+                    }
                 }
             }
         }
     };
-
-    const canRotate = () => {};
 
     const rotateTetromino = (direction: string) => {
         const tetromino: Shape = activeTetromino.current;
@@ -163,9 +176,42 @@ const GameBoard = () => {
                 }
             }
         }
-        activeTetromino.current = rotated;
+        if (canMove(rotated, positionRef.current)) {
+            activeTetromino.current = rotated;
+            renderTetromino();
+        }
+    };
+
+    const dropTetromino = () => {
+        const tetromino: Shape = activeTetromino.current;
+        let newPostion: Position = positionRef.current;
+        while (canMove(tetromino, {...newPostion, y: newPostion.y + 1})) {
+            newPostion = {...newPostion, y: newPostion.y + 1}
+        }
+        positionRef.current = newPostion;
         renderTetromino();
     };
+
+    const checkGameOver = () => {
+        const tetromino: Shape = activeTetromino.current;
+        const width: number = tetromino[0].length;
+        const height: number = tetromino.length;
+        for (let i = 0; i < height; i++) {
+            for (let j = 0; j < width; j++) {
+                if (tetromino[i][j] && gridRef.current[positionRef.current.y + i][positionRef.current.x + j].filled) {
+                    return true
+                }
+            }
+        }
+        return false;
+    };
+
+    const resetGameBoard = () => {
+        gridRef.current = createGrid();
+        initTetromino();
+        setGrid(gridRef.current);
+        renderTetromino();
+    }
     
     useEffect(() => {
         // setInterval内のstateは初期値が保存されているためuseRefで対応する。
@@ -196,6 +242,8 @@ const GameBoard = () => {
                     rotateTetromino("left");
                 } else if (e.key === "x") {
                     rotateTetromino("right");
+                } else if (e.key === "ArrowUp") {
+                    dropTetromino();
                 }
             }
         }
@@ -212,7 +260,7 @@ const GameBoard = () => {
                     {row.map((cell, cellIndex) => (
                         <span
                             key={cellIndex}
-                            className={`inline-block w-3 h-3 ${cell.filled? "bg-sky-500": "bg-white"} border-black border`}>
+                            className={`inline-block w-6 h-6 ${cell.filled? "bg-sky-500": "bg-white"} border-black border`}>
                         </span>
                     ))}
                 </div>
