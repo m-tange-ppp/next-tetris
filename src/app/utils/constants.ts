@@ -2,6 +2,7 @@ import { Tetrominoes } from "./types";
 
 export const ROWS = 20;
 export const COLS = 6;
+export const TYPES = ["I", "O", "T", "L", "J", "S", "Z"];
 
 export const tetrominoes: Tetrominoes = {
     I: {type: "I", shape: [

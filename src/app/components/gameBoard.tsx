@@ -1,18 +1,36 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ROWS, COLS, tetrominoes } from "../utils/constants";
+import { ROWS, COLS, tetrominoes, TYPES } from "../utils/constants";
 import { Grid, Position, Shape, Tetromino } from "../utils/types";
 
 const GameBoard = () => {
     const createGrid = (): Grid => Array(ROWS).fill(null).map(() => Array(COLS).fill({ filled: 0 }));
 
+    const setRandomTetrominoTypesArray = () => {
+        const newTypes: string[] = [...TYPES];
+        for (let i = TYPES.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [newTypes[i], newTypes[j]] = [newTypes[j], newTypes[i]]
+        }
+        typesRef.current = newTypes;
+    };
+    
+    const setRandomTetromino = () => {
+        const types: string[] = typesRef.current;
+        if (types.length === 0) {
+            setRandomTetrominoTypesArray();
+        }
+        const randomTypes: string = typesRef.current.pop() as string
+        activeTetromino.current = tetrominoes[randomTypes];
+    };
+    
     const calcCenter = (): number => {
         const tetromino: Tetromino = activeTetromino.current;
         const width: number = tetromino.shape[0].length;
         return Math.floor((COLS - width + 1) / 2);
     };
-
+    
     const calcTop = (): number => {
         const tetromino: Tetromino = activeTetromino.current;
         let top: number = 0;
@@ -21,11 +39,21 @@ const GameBoard = () => {
         }
         return top;
     };
-
+    
     const [grid, setGrid] = useState(createGrid());
-
-    const activeTetromino = useRef(tetrominoes["T"]);
-    const positionRef = useRef({x: calcCenter(), y: calcTop()});
+    
+    const typesRef = useRef<string[]>(null!);
+    if (typesRef.current === null) {
+        setRandomTetrominoTypesArray();
+    }
+    const activeTetromino = useRef<Tetromino>(null!);
+    if (activeTetromino.current === null) {
+        setRandomTetromino();
+    }
+    const positionRef = useRef<Position>(null!);
+    if (positionRef.current === null) {
+        positionRef.current = {x: calcCenter(), y: calcTop()};
+    }
     const gridRef = useRef(grid);
     const existFullRowsRef = useRef(false);
 
@@ -82,13 +110,6 @@ const GameBoard = () => {
             }
         }
         return true;
-    };
-    
-    const setRandomTetromino = () => {
-        const keys: string[] = Object.keys(tetrominoes);
-        const randomKey: string = keys[Math.floor(Math.random() * keys.length)];
-        activeTetromino.current = tetrominoes[randomKey];
-        console.log(activeTetromino.current);
     };
     
     const checkFullRows = (): number[] => {
@@ -209,6 +230,7 @@ const GameBoard = () => {
 
     const resetGameBoard = () => {
         gridRef.current = createGrid();
+        setRandomTetrominoTypesArray();
         initTetromino();
         setGrid(gridRef.current);
         renderTetromino();
