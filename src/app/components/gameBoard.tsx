@@ -5,9 +5,10 @@ import { ROWS, COLS, tetrominoes, TYPES } from "../utils/constants";
 import { Grid, Position, Shape, Tetromino } from "../utils/types";
 
 const GameBoard = () => {
-    const createGrid = (): Grid => Array(ROWS).fill(null).map(() => Array(COLS).fill({ filled: 0 }));
+    const createGrid = (): Grid => {
+        return Array(ROWS).fill(null).map(() => Array(COLS).fill({ filled: 0 }))};
 
-    const setRandomTetrominoTypesArray = () => {
+    const initializeTypesArray = () => {
         const newTypes: string[] = [...TYPES];
         for (let i = TYPES.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
@@ -16,43 +17,40 @@ const GameBoard = () => {
         typesRef.current = newTypes;
     };
     
-    const setRandomTetromino = () => {
+    const initializeRandomTetromino = () => {
         const types: string[] = typesRef.current;
         if (types.length === 0) {
-            setRandomTetrominoTypesArray();
+            initializeTypesArray();
         }
         const randomTypes: string = typesRef.current.pop() as string
-        activeTetromino.current = tetrominoes[randomTypes];
+        // deepCopyしてrotateを元の配列に影響させないように
+        activeTetromino.current = {type: tetrominoes[randomTypes].type, shape: tetrominoes[randomTypes].shape.map(row => [...row])};
     };
     
-    const calcCenter = (): number => {
+    const initializeFirstPosition = () => {
         const tetromino: Tetromino = activeTetromino.current;
         const width: number = tetromino.shape[0].length;
-        return Math.floor((COLS - width + 1) / 2);
-    };
-    
-    const calcTop = (): number => {
-        const tetromino: Tetromino = activeTetromino.current;
+        const center = Math.floor((COLS - width + 1) / 2);
         let top: number = 0;
         if (tetromino.shape[0].every(cell => cell === 0)) {
             top -= 1;
         }
-        return top;
+        positionRef.current = {x: center, y: top};
     };
     
-    const [grid, setGrid] = useState(createGrid());
+    const [grid, setGrid] = useState(() => createGrid());
     
     const typesRef = useRef<string[]>(null!);
     if (typesRef.current === null) {
-        setRandomTetrominoTypesArray();
+        initializeTypesArray();
     }
     const activeTetromino = useRef<Tetromino>(null!);
     if (activeTetromino.current === null) {
-        setRandomTetromino();
+        initializeRandomTetromino();
     }
     const positionRef = useRef<Position>(null!);
     if (positionRef.current === null) {
-        positionRef.current = {x: calcCenter(), y: calcTop()};
+        initializeFirstPosition();
     }
     const gridRef = useRef(grid);
     const existFullRowsRef = useRef(false);
@@ -62,10 +60,15 @@ const GameBoard = () => {
         const width: number = tetromino.shape[0].length;
         const height: number = tetromino.shape.length;
         const newGrid: Grid = gridRef.current.map(row => row.map(cell => ({...cell})));
+        let dropPosition: Position = {...positionRef.current};
+        while (canMove(tetromino, {...dropPosition, y: dropPosition.y + 1})) {
+            dropPosition.y++
+        }
         for (let i = 0; i < height; i++) {
             for (let j = 0; j < width; j++) {
                 if (tetromino.shape[i][j]) {
                     newGrid[positionRef.current.y + i][positionRef.current.x + j] = {filled: 1, type: tetromino.type};
+                    newGrid[dropPosition.y + i][dropPosition.x + j] = {filled: 1, type: "dummy"};
                 }
             }
         }
@@ -134,9 +137,9 @@ const GameBoard = () => {
         setGrid(newGrid);
     };
 
-    const initTetromino = () => {
-        setRandomTetromino();
-        positionRef.current = {x: calcCenter(), y: calcTop()};
+    const initializeNewTetromino = () => {
+        initializeRandomTetromino();
+        initializeFirstPosition();
     };
 
     const moveTetromino = (direction: string) => {
@@ -166,7 +169,7 @@ const GameBoard = () => {
                     clearRows(fullRows);
                     existFullRowsRef.current = true;
                 } else {
-                    initTetromino();
+                    initializeNewTetromino();
                     if (checkGameOver()) {
                         console.log("over");
                         resetGameBoard();
@@ -206,11 +209,10 @@ const GameBoard = () => {
 
     const dropTetromino = () => {
         const tetromino: Tetromino = activeTetromino.current;
-        let newPostion: Position = positionRef.current;
-        while (canMove(tetromino, {...newPostion, y: newPostion.y + 1})) {
-            newPostion = {...newPostion, y: newPostion.y + 1}
+        let newPosition: Position = positionRef.current;
+        while (canMove(tetromino, {...newPosition, y: newPosition.y + 1})) {
+            newPosition.y ++;
         }
-        positionRef.current = newPostion;
         renderTetromino();
     };
 
@@ -230,11 +232,11 @@ const GameBoard = () => {
 
     const resetGameBoard = () => {
         gridRef.current = createGrid();
-        setRandomTetrominoTypesArray();
-        initTetromino();
+        initializeTypesArray();
+        initializeNewTetromino();
         setGrid(gridRef.current);
         renderTetromino();
-    }
+    };
     
     useEffect(() => {
         // setInterval内のstateは初期値が保存されているためuseRefで対応する。
@@ -242,7 +244,7 @@ const GameBoard = () => {
         const interval: NodeJS.Timeout = setInterval(() => {
             if (existFullRowsRef.current) {
                 // 消去した後に新しいミノを始める
-                initTetromino();
+                initializeNewTetromino();
                 renderTetromino();
                 existFullRowsRef.current = false;
             } else {
@@ -297,7 +299,7 @@ const GameBoard = () => {
                                 ? "bg-lime-500"
                                 : cell.type === "Z"
                                 ? "bg-red-500"
-                                : "bg-gray-500"
+                                : "bg-gray-300"
                                 : "bg-white"}`}>
                         </span>
                     ))}
