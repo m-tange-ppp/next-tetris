@@ -4,39 +4,39 @@ export const ROWS = 20;
 export const COLS = 6;
 
 export const tetrominoes: Tetrominoes = {
-    I: [
+    I: {type: "I", shape: [
     [0, 0, 0, 0],
     [1, 1, 1, 1],
     [0, 0, 0, 0],
     [0, 0, 0, 0],
-    ],
-    O: [
+    ]}, 
+    O: {type: "O", shape: [
     [1, 1], 
     [1, 1],
-    ],
-    T: [
+    ]},
+    T: {type: "T", shape: [
     [0, 1, 0], 
     [1, 1, 1],
     [0, 0, 0]
-    ],
-    L: [
+    ]},
+    L: {type: "L", shape: [
     [0, 0, 1], 
     [1, 1, 1], 
     [0, 0, 0],
-    ],
-    J: [
+    ]},
+    J: {type: "J", shape: [
     [1, 0, 0], 
     [1, 1, 1], 
     [0, 0, 0],
-    ],
-    S: [
+    ]},
+    S: {type: "S", shape: [
     [0, 0, 0],
     [0, 1, 1],
     [1, 1, 0],
-    ],
-    Z: [
+    ]},
+    Z: {type: "Z", shape: [
     [0, 0, 0],
     [1, 1, 0],
     [0, 1, 1],
-    ],
+    ]}
 };

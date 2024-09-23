@@ -2,22 +2,21 @@
 
 import { useEffect, useRef, useState } from "react";
 import { ROWS, COLS, tetrominoes } from "../utils/constants";
-import { Grid, Position, Shape } from "../utils/types";
-import { render } from "react-dom";
+import { Grid, Position, Shape, Tetromino } from "../utils/types";
 
 const GameBoard = () => {
     const createGrid = (): Grid => Array(ROWS).fill(null).map(() => Array(COLS).fill({ filled: 0 }));
 
     const calcCenter = (): number => {
-        const tetromino: Shape = activeTetromino.current;
-        const width: number = tetromino[0].length;
+        const tetromino: Tetromino = activeTetromino.current;
+        const width: number = tetromino.shape[0].length;
         return Math.floor((COLS - width + 1) / 2);
     };
 
     const calcTop = (): number => {
-        const tetromino: Shape = activeTetromino.current;
+        const tetromino: Tetromino = activeTetromino.current;
         let top: number = 0;
-        if (tetromino[0].every(cell => cell === 0)) {
+        if (tetromino.shape[0].every(cell => cell === 0)) {
             top -= 1;
         }
         return top;
@@ -31,14 +30,14 @@ const GameBoard = () => {
     const existFullRowsRef = useRef(false);
 
     const renderTetromino = () => {
-        const tetromino: Shape = activeTetromino.current;
-        const width: number = tetromino[0].length;
-        const height: number = tetromino.length;
+        const tetromino: Tetromino = activeTetromino.current;
+        const width: number = tetromino.shape[0].length;
+        const height: number = tetromino.shape.length;
         const newGrid: Grid = gridRef.current.map(row => row.map(cell => ({...cell})));
         for (let i = 0; i < height; i++) {
             for (let j = 0; j < width; j++) {
-                if (tetromino[i][j]) {
-                    newGrid[positionRef.current.y + i][positionRef.current.x + j].filled = tetromino[i][j];
+                if (tetromino.shape[i][j]) {
+                    newGrid[positionRef.current.y + i][positionRef.current.x + j] = {filled: 1, type: tetromino.type};
                 }
             }
         }
@@ -46,14 +45,14 @@ const GameBoard = () => {
     };
 
     const placeTetromino = () => {
-        const tetromino: Shape = activeTetromino.current;
-        const width: number = tetromino[0].length;
-        const height: number = tetromino.length;
+        const tetromino: Tetromino = activeTetromino.current;
+        const width: number = tetromino.shape[0].length;
+        const height: number = tetromino.shape.length;
         const newGrid: Grid = gridRef.current.map(row => row.map(cell => ({...cell})));
         for (let i = 0; i < height; i++) {
             for (let j = 0; j < width; j++) {
-                if (tetromino[i][j]) {
-                    newGrid[positionRef.current.y + i][positionRef.current.x + j].filled = tetromino[i][j];
+                if (tetromino.shape[i][j]) {
+                    newGrid[positionRef.current.y + i][positionRef.current.x + j] = {filled: 1, type: tetromino.type};
                 }
             }
         }
@@ -62,17 +61,18 @@ const GameBoard = () => {
         setGrid(newGrid);
     };
 
-    const canMove = (tetromino: Shape, newPosition: Position) => {
-        const width: number = tetromino[0].length;
-        const height: number = tetromino.length;
+    const canMove = (tetromino: Tetromino, newPosition: Position) => {
+        const width: number = tetromino.shape[0].length;
+        const height: number = tetromino.shape.length;
         let newX, newY;
         for (let i = 0; i < height; i++) {
             for (let j = 0; j < width; j++) {
-                if (tetromino[i][j]) {
+                if (tetromino.shape[i][j]) {
                     newY = newPosition.y + i;
                     newX = newPosition.x + j;
                     // refを参照して置かれたミノとの衝突を確認する
-                    if (newY >= ROWS || 
+                    if (newY <= - 1 ||
+                        newY >= ROWS || 
                         newX <= -1 ||
                         newX >= COLS ||
                         gridRef.current[newY][newX].filled) {
@@ -88,6 +88,7 @@ const GameBoard = () => {
         const keys: string[] = Object.keys(tetrominoes);
         const randomKey: string = keys[Math.floor(Math.random() * keys.length)];
         activeTetromino.current = tetrominoes[randomKey];
+        console.log(activeTetromino.current);
     };
     
     const checkFullRows = (): number[] => {
@@ -157,33 +158,33 @@ const GameBoard = () => {
     };
 
     const rotateTetromino = (direction: string) => {
-        const tetromino: Shape = activeTetromino.current;
-        const width: number = tetromino[0].length;
-        const height: number = tetromino.length;
+        const tetromino: Tetromino = activeTetromino.current;
+        const width: number = tetromino.shape[0].length;
+        const height: number = tetromino.shape.length;
         const rotated: Shape = [];
         if (direction === "left") {
             for (let i = 0; i < width; i++) {
                 rotated[i] = [];
                 for (let j = 0; j < height; j++) {
-                    rotated[i][j] = tetromino[j][width - 1 - i];
+                    rotated[i][j] = tetromino.shape[j][width - 1 - i];
                 }
             }
         } else {
             for (let i = 0; i < width; i++) {
                 rotated[i] = [];
                 for (let j = 0; j < height; j++) {
-                    rotated[i][j] = tetromino[height - 1 - j][i];
+                    rotated[i][j] = tetromino.shape[height - 1 - j][i];
                 }
             }
         }
-        if (canMove(rotated, positionRef.current)) {
-            activeTetromino.current = rotated;
+        if (canMove({type: activeTetromino.current.type, shape: rotated}, positionRef.current)) {
+            activeTetromino.current.shape = rotated;
             renderTetromino();
         }
     };
 
     const dropTetromino = () => {
-        const tetromino: Shape = activeTetromino.current;
+        const tetromino: Tetromino = activeTetromino.current;
         let newPostion: Position = positionRef.current;
         while (canMove(tetromino, {...newPostion, y: newPostion.y + 1})) {
             newPostion = {...newPostion, y: newPostion.y + 1}
@@ -193,12 +194,12 @@ const GameBoard = () => {
     };
 
     const checkGameOver = () => {
-        const tetromino: Shape = activeTetromino.current;
-        const width: number = tetromino[0].length;
-        const height: number = tetromino.length;
+        const tetromino: Tetromino = activeTetromino.current;
+        const width: number = tetromino.shape[0].length;
+        const height: number = tetromino.shape.length;
         for (let i = 0; i < height; i++) {
             for (let j = 0; j < width; j++) {
-                if (tetromino[i][j] && gridRef.current[positionRef.current.y + i][positionRef.current.x + j].filled) {
+                if (tetromino.shape[i][j] && gridRef.current[positionRef.current.y + i][positionRef.current.x + j].filled) {
                     return true
                 }
             }
@@ -260,7 +261,22 @@ const GameBoard = () => {
                     {row.map((cell, cellIndex) => (
                         <span
                             key={cellIndex}
-                            className={`inline-block w-6 h-6 ${cell.filled? "bg-sky-500": "bg-white"} border-black border`}>
+                            className={`inline-block w-6 h-6 border border-black -m-px ${cell.filled? cell.type === "I"
+                                ? "bg-cyan-500"
+                                : cell.type === "O"
+                                ? "bg-yellow-500"
+                                : cell.type === "T"
+                                ? "bg-purple-500"
+                                : cell.type === "L"
+                                ? "bg-orange-500"
+                                : cell.type === "J"
+                                ? "bg-blue-500"
+                                : cell.type === "S"
+                                ? "bg-lime-500"
+                                : cell.type === "Z"
+                                ? "bg-red-500"
+                                : "bg-gray-500"
+                                : "bg-white"}`}>
                         </span>
                     ))}
                 </div>

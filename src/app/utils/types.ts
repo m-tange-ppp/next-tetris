@@ -1,12 +1,14 @@
 export interface Cell {
     filled: number;
-    color?: string;
+    type?: string;
     }
 
 export type Grid = Cell[][];
 
 export type Shape = number[][];
 
-export type Tetrominoes = {[key: string]: Shape};
+export type Tetromino = {type: string, shape: Shape};
+
+export type Tetrominoes = {[key: string]: Tetromino};
 
 export type Position = {x: number, y: number};
