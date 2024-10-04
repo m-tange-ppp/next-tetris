@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ROWS, COLS, tetrominoes, TYPES } from "../utils/constants";
+import { ROWS, COLS, TETROMINOES, TYPES , WALLKICKDATA} from "../utils/constants";
 import { Grid, Position, Shape, Tetromino } from "../utils/types";
+import { dir } from "console";
 
 const GameBoard = () => {
     const createGrid = (): Grid => {
@@ -30,7 +31,7 @@ const GameBoard = () => {
         }
 
         const randomType: string = typesRef.current.pop() as string;
-        const randomTetromino = tetrominoes[randomType];
+        const randomTetromino = TETROMINOES[randomType];
 
         // ディープコピーしてrotateを元の配列に影響させないように
         activeTetromino.current = {type: randomTetromino.type, shape: randomTetromino.shape.map(row => [...row])};
@@ -76,12 +77,14 @@ const GameBoard = () => {
     // gridを更新するときに使う。
     const gridRef = useRef(grid);
     const existFullRowsRef = useRef(false);
+    const rotationAngleRef = useRef(0);
 
 
 
     const initializeNewTetromino = () => {
         initializeTetrominoType();
         initializeFirstPosition();
+        rotationAngleRef.current = 0;
     };
 
 
@@ -270,7 +273,28 @@ const GameBoard = () => {
         }
         if (canMove({type: activeTetromino.current.type, shape: rotated}, positionRef.current)) {
             activeTetromino.current.shape = rotated;
+            if (direction === "left") {
+                rotationAngleRef.current = (rotationAngleRef.current + 1) % 3;
+            } else {
+                rotationAngleRef.current = (rotationAngleRef.current - 1) % 3;
+            }
             renderTetromino();
+            return;
+        }
+    };
+
+
+
+    const rotateSpecial = (tetromino: Tetromino, position: Position, direction: string) => {
+        let wallKickType: Number[][];
+        let initial = "L";
+        if (direction === "right") {
+            initial = "R";
+        }
+        if (tetromino.type === "I") {
+            // Iだけ違うらしい
+        } else {
+            wallKickType = WALLKICKDATA[`${initial}${rotationAngleRef.current}`];
         }
     };
 
