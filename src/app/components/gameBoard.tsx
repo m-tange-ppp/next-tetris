@@ -271,12 +271,18 @@ const GameBoard = () => {
                 }
             }
         }
-        if (canMove({type: activeTetromino.current.type, shape: rotated}, positionRef.current)) {
-            activeTetromino.current.shape = rotated;
+
+        const newTetromino: Tetromino = {type: activeTetromino.current.type, shape: rotated};
+        const newPosition: Position|null = calculateSRSPosition(newTetromino, positionRef.current, direction);
+        // 回転可能な時の処理
+        if (newPosition !== null) {
+            activeTetromino.current = newTetromino;
+            positionRef.current = newPosition;
             if (direction === "left") {
                 rotationAngleRef.current = (rotationAngleRef.current + 1) % 3;
             } else {
-                rotationAngleRef.current = (rotationAngleRef.current - 1) % 3;
+                // 負にならないように+4している。
+                rotationAngleRef.current = (rotationAngleRef.current - 1 + 4) % 3;
             }
             renderTetromino();
             return;
@@ -285,17 +291,27 @@ const GameBoard = () => {
 
 
 
-    const rotateSpecial = (tetromino: Tetromino, position: Position, direction: string) => {
-        let wallKickType: Number[][];
-        let initial = "L";
+    const calculateSRSPosition = (tetromino: Tetromino, position: Position, direction: string): Position|null => {
+        let wallKickRule: number[][] = [];
+        let initial: string = "L";
         if (direction === "right") {
             initial = "R";
         }
         if (tetromino.type === "I") {
             // Iだけ違うらしい
         } else {
-            wallKickType = WALLKICKDATA[`${initial}${rotationAngleRef.current}`];
+            console.log(rotationAngleRef.current);
+            wallKickRule = WALLKICKDATA[`${initial}${rotationAngleRef.current}`];
         }
+        // wallKickTypeを先頭から試して、可能であれば回転する。
+        for (let i = 0; i < wallKickRule.length; i++) {
+            let div = wallKickRule[i];
+            let newPosition = {x: position.x + div[0], y: position.y + div[1]};
+            if (canMove(tetromino, newPosition)) {
+                return newPosition;
+            }
+        }
+        return null;
     };
 
 

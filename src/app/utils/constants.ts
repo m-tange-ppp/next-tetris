@@ -42,7 +42,8 @@ export const TETROMINOES: Tetrominoes = {
     ]}
 };
 
-export const WALLKICKDATA: {[key: string]: Number[][]} = {
+// SRSで用いる。先頭から順に参照して回転可能か判定する。
+export const WALLKICKDATA: {[key: string]: number[][]} = {
     // 0123は順に反時計回りで0度から順に回転した状態。
     // L3は現在状態3で左回転したいということ。
     "L0": [
@@ -70,4 +71,5 @@ export const WALLKICKDATA: {[key: string]: Number[][]} = {
     "R3": [
         [0, 0], [1, 0], [1, -1], [0, 2], [1, 2]
     ], 
+    // Iミノだけ別の法則でずらしていく
 };
