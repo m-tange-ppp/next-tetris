@@ -1,5 +1,5 @@
 import { NextPage } from "next";
-import GameBoard from "./components/gameBoard";
+import GameBoard from "./components/GameBoard";
 
 const Home: NextPage = () => {
   return (

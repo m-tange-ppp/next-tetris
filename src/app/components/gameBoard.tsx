@@ -3,12 +3,16 @@
 import { useEffect, useRef, useState } from "react";
 import { ROWS, COLS, TETROMINOES, TYPES , WALLKICKDATA} from "../utils/constants";
 import { Grid, Position, Shape, Tetromino } from "../utils/types";
-import { dir } from "console";
+import React from "react";
 
-const GameBoard = () => {
+
+interface GameBoardProps {
+    setNextTetrominoType: React.Dispatch<React.SetStateAction<string|null>>;
+}
+
+const GameBoard: React.FC<GameBoardProps> = React.memo(({ setNextTetrominoType }) => {
     const createGrid = (): Grid => {
         return Array(ROWS).fill(null).map(() => Array(COLS).fill({ filled: 0 }))};
-
 
 
     // テトロミノの配列をランダムに初期化する。
@@ -20,7 +24,6 @@ const GameBoard = () => {
         }
         typesRef.current = newTypes;
     };
-
 
 
     // テトロミノの種類を初期化する。
@@ -38,7 +41,6 @@ const GameBoard = () => {
     };
 
 
-
     // テトロミノの種類を考慮して真ん中上のpositionを初期化する。
     const initializeFirstPosition = () => {
         const tetromino: Tetromino = activeTetromino.current;
@@ -53,10 +55,9 @@ const GameBoard = () => {
     };
 
 
-
     // ここからuseState, useRefで定義ゾーン。
     // gridを更新して再レンダリングを促す。
-    const [grid, setGrid] = useState(() => createGrid());
+    const [grid, setGrid] = useState<Grid>(() => createGrid());
     
     // nullで初期化するuseRefは初回レンダリング時のみ初期化する。
     // レンダリングのたびに関数を呼ばなくてよいように。
@@ -75,10 +76,9 @@ const GameBoard = () => {
 
     // 実際のgridはgridRefに保存する。
     // gridを更新するときに使う。
-    const gridRef = useRef(grid);
-    const existFullRowsRef = useRef(false);
-    const rotationAngleRef = useRef(0);
-
+    const gridRef = useRef<Grid>(grid);
+    const existFullRowsRef = useRef<boolean>(false);
+    const rotationAngleRef = useRef<number>(0);
 
 
     const initializeNewTetromino = () => {
@@ -86,7 +86,6 @@ const GameBoard = () => {
         initializeFirstPosition();
         rotationAngleRef.current = 0;
     };
-
 
 
     const renderTetromino = () => {
@@ -119,7 +118,6 @@ const GameBoard = () => {
     };
 
 
-
     const placeTetromino = () => {
         const tetromino: Tetromino = activeTetromino.current;
         const width: number = tetromino.shape[0].length;
@@ -137,7 +135,6 @@ const GameBoard = () => {
         gridRef.current = newGrid;
         setGrid(newGrid);
     };
-
 
 
     const canMove = (tetromino: Tetromino, newPosition: Position) => {
@@ -166,7 +163,6 @@ const GameBoard = () => {
     };
 
 
-
     const checkFullRows = (): number[] => {
         const fullRows: number[] = [];
         const newGrid: Grid = gridRef.current.map(row => row.map(cell => ({...cell})));
@@ -180,7 +176,6 @@ const GameBoard = () => {
     };
 
 
-
     const clearRows = (rows: number[]) => {
         const newGrid: Grid = gridRef.current.map(row => row.map(cell => ({...cell})));
         // 横一列埋まっている列を消して、上に空白列追加する。
@@ -192,7 +187,6 @@ const GameBoard = () => {
         gridRef.current = newGrid;
         setGrid(newGrid);
     };
-
 
 
     // テトロミノを置いた後のいろいろな処理をする。
@@ -214,7 +208,6 @@ const GameBoard = () => {
             }
         }
     };
-
 
 
     const moveTetromino = (direction: string) => {
@@ -246,7 +239,6 @@ const GameBoard = () => {
             }
         }
     };
-
 
 
     const rotateTetromino = (direction: string) => {
@@ -290,7 +282,6 @@ const GameBoard = () => {
     };
 
 
-
     const calculateSRSPosition = (tetromino: Tetromino, position: Position, direction: string): Position|null => {
         let wallKickRule: number[][] = [];
         let initial: string = "L";
@@ -314,7 +305,6 @@ const GameBoard = () => {
     };
 
 
-
     const dropTetromino = () => {
         const tetromino: Tetromino = activeTetromino.current;
         let newPosition: Position = positionRef.current;
@@ -324,7 +314,6 @@ const GameBoard = () => {
         }
         renderTetromino();
     };
-
 
 
     const checkGameOver = () => {
@@ -344,7 +333,6 @@ const GameBoard = () => {
     };
 
 
-
     const resetGameBoard = () => {
         gridRef.current = createGrid();
         setGrid(gridRef.current);
@@ -352,7 +340,6 @@ const GameBoard = () => {
         initializeNewTetromino();
         renderTetromino();
     };
-
 
 
     // 基本的なゲームの流れ。
@@ -372,7 +359,6 @@ const GameBoard = () => {
         }, 500);
         return () => clearInterval(interval);
     }, []);
-
 
 
     // キー操作に動きを割り当てる。
@@ -399,7 +385,6 @@ const GameBoard = () => {
             window.removeEventListener("keydown", handleKeyPress);
         }
     });
-
 
 
     // 描画部分。テトロミノの種類によって色を変える。
@@ -432,6 +417,6 @@ const GameBoard = () => {
             ))}
         </div>
     )
-}
+});
 
 export default GameBoard;
