@@ -298,9 +298,8 @@ const GameBoard = () => {
             initial = "R";
         }
         if (tetromino.type === "I") {
-            // Iだけ違うらしい
+            wallKickRule = WALLKICKDATA[`I${initial}${rotationAngleRef.current}`];
         } else {
-            console.log(rotationAngleRef.current);
             wallKickRule = WALLKICKDATA[`${initial}${rotationAngleRef.current}`];
         }
         // wallKickTypeを先頭から試して、可能であれば回転する。
