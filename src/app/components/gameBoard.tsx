@@ -7,36 +7,37 @@ import React from "react";
 
 
 interface GameBoardProps {
-    setNextTetrominoType: React.Dispatch<React.SetStateAction<string|null>>;
+    setNextTetrominoType: React.Dispatch<React.SetStateAction<string>>;
 }
 
 const GameBoard: React.FC<GameBoardProps> = React.memo(({ setNextTetrominoType }) => {
     const createGrid = (): Grid => {
-        return Array(ROWS).fill(null).map(() => Array(COLS).fill({ filled: 0 }))};
+        return Array(ROWS).fill(null).map(() => Array(COLS).fill({ filled: 0 }))
+    };
 
 
-    // テトロミノの配列をランダムに初期化する。
+    // テトロミノの配列をランダムに初期化して追加する。
     const initializeTypesArray = () => {
         const newTypes: string[] = [...TYPES];
         for (let i = TYPES.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
             [newTypes[i], newTypes[j]] = [newTypes[j], newTypes[i]]
         }
-        typesRef.current = newTypes;
+        typesRef.current = [...typesRef.current, ...newTypes];
     };
 
 
     // テトロミノの種類を初期化する。
     const initializeTetrominoType = () => {
         const types: string[] = typesRef.current;
-        if (types.length === 0) {
+        if (types.length < 3) {
             initializeTypesArray();
         }
 
-        const randomType: string = typesRef.current.pop() as string;
+        const randomType: string = types.pop() as string;
         const randomTetromino = TETROMINOES[randomType];
 
-        // ディープコピーしてrotateを元の配列に影響させないように
+        // ディープコピーしてrotateを元の配列に影響させないように。
         activeTetromino.current = {type: randomTetromino.type, shape: randomTetromino.shape.map(row => [...row])};
     };
 
@@ -61,8 +62,8 @@ const GameBoard: React.FC<GameBoardProps> = React.memo(({ setNextTetrominoType }
     
     // nullで初期化するuseRefは初回レンダリング時のみ初期化する。
     // レンダリングのたびに関数を呼ばなくてよいように。
-    const typesRef = useRef<string[]>(null!);
-    if (typesRef.current === null) {
+    const typesRef = useRef<string[]>([]);
+    if (typesRef.current.length === 0) {
         initializeTypesArray();
     }
     const activeTetromino = useRef<Tetromino>(null!);
@@ -385,6 +386,13 @@ const GameBoard: React.FC<GameBoardProps> = React.memo(({ setNextTetrominoType }
             window.removeEventListener("keydown", handleKeyPress);
         }
     });
+
+
+    // 次のテトロミノをTetrisGameに通知する。
+    useEffect(() => {
+        setNextTetrominoType(typesRef.current[typesRef.current.length - 1]);
+        console.log(typesRef.current[typesRef.current.length - 1]);
+    }, [activeTetromino.current.type]);
 
 
     // 描画部分。テトロミノの種類によって色を変える。

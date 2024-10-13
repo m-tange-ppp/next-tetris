@@ -1,11 +1,11 @@
 import { NextPage } from "next";
-import GameBoard from "./components/GameBoard";
+import TetrisGame from "./components/TetrisGame";
 
 const Home: NextPage = () => {
   return (
     <div>
       <h1>Tetris</h1>
-        <GameBoard/>
+      <TetrisGame />
     </div>
   )
 }
