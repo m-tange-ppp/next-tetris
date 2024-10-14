@@ -6,13 +6,16 @@ import { TETROMINOES } from "../utils/constants";
 
 
 interface GameBoardProps {
-    nextTetrominoType: string;
-}
+    nextTetrominoType: string|null;
+};
 
 
-const NextTetromino: React.FC<GameBoardProps> = ({ nextTetrominoType }) => {
+const ShowTetromino: React.FC<GameBoardProps> = ({ nextTetrominoType }) => {
     const createGrid = (): Grid => {
-        let width: number = TETROMINOES[nextTetrominoType].shape.length;
+        let width: number = 3;
+        if (nextTetrominoType !== null) {
+            width = TETROMINOES[nextTetrominoType].shape.length;
+        }
         return Array(width).fill(null).map(() => Array(width).fill({ filled: 0 }));
     };
 
@@ -23,7 +26,7 @@ const NextTetromino: React.FC<GameBoardProps> = ({ nextTetrominoType }) => {
     const renderTetromino = () => {
         const newGrid: Grid = createGrid();
         const width: number = newGrid.length;
-        const tetromino: Tetromino = TETROMINOES[nextTetrominoType];
+        const tetromino: Tetromino = TETROMINOES[nextTetrominoType as string];
 
         for (let i = 0; i < width; i++) {
             for (let j = 0; j < width; j++) {
@@ -38,8 +41,7 @@ const NextTetromino: React.FC<GameBoardProps> = ({ nextTetrominoType }) => {
     
     
     useEffect(() => {
-        if (nextTetrominoType !== "") {
-            console.log(nextTetrominoType);
+        if (nextTetrominoType !== null) {
             renderTetromino();
         }
     }, [nextTetrominoType]);
@@ -80,4 +82,4 @@ const NextTetromino: React.FC<GameBoardProps> = ({ nextTetrominoType }) => {
 };
 
 
-export default NextTetromino;
+export default ShowTetromino;
