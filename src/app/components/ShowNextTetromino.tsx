@@ -10,7 +10,7 @@ interface GameBoardProps {
 };
 
 
-const ShowTetromino: React.FC<GameBoardProps> = ({ nextTetrominoType }) => {
+const ShowNextTetromino: React.FC<GameBoardProps> = ({ nextTetrominoType }) => {
     const createGrid = (): Grid => {
         let width: number = 3;
         if (nextTetrominoType !== null) {
@@ -23,7 +23,7 @@ const ShowTetromino: React.FC<GameBoardProps> = ({ nextTetrominoType }) => {
     const [grid, setGrid] = useState<Grid>(() => createGrid());
 
 
-    const renderTetromino = () => {
+    const renderTetromino = (): void => {
         const newGrid: Grid = createGrid();
         const width: number = newGrid.length;
         const tetromino: Tetromino = TETROMINOES[nextTetrominoType as string];
@@ -82,4 +82,4 @@ const ShowTetromino: React.FC<GameBoardProps> = ({ nextTetrominoType }) => {
 };
 
 
-export default ShowTetromino;
+export default ShowNextTetromino;

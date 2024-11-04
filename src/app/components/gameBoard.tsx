@@ -20,7 +20,7 @@ const GameBoard: React.FC<GameBoardProps> = React.memo(({ setNextTetrominoType, 
 
 
     // テトロミノの配列をランダムに初期化して追加する。
-    const initializeTypesArray = () => {
+    const initializeTypesArray = (): void => {
         const newTypes: string[] = [...TYPES];
         for (let i = TYPES.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
@@ -31,7 +31,7 @@ const GameBoard: React.FC<GameBoardProps> = React.memo(({ setNextTetrominoType, 
 
 
     // テトロミノの種類を初期化する。
-    const initializeTetrominoType = () => {
+    const initializeTetrominoType = (): void => {
         // typesRefを参照渡ししない。
         if (typesRef.current.length < 3) {
             initializeTypesArray();
@@ -46,7 +46,7 @@ const GameBoard: React.FC<GameBoardProps> = React.memo(({ setNextTetrominoType, 
 
 
     // テトロミノの種類を考慮して真ん中上のpositionを初期化する。
-    const initializeFirstPosition = () => {
+    const initializeFirstPosition = (): void => {
         const tetromino: Tetromino = activeTetromino.current;
         const width: number = tetromino.shape[0].length;
         const center = Math.floor((COLS - width + 1) / 2);
@@ -86,14 +86,14 @@ const GameBoard: React.FC<GameBoardProps> = React.memo(({ setNextTetrominoType, 
     const rotationAngleRef = useRef<number>(0);
 
 
-    const initializeNewTetromino = () => {
+    const initializeNewTetromino = (): void => {
         initializeTetrominoType();
         initializeFirstPosition();
         rotationAngleRef.current = 0;
     };
 
 
-    const renderTetromino = () => {
+    const renderTetromino = (): void => {
         const tetromino: Tetromino = activeTetromino.current;
         const width: number = tetromino.shape[0].length;
         const height: number = tetromino.shape.length;
@@ -123,7 +123,7 @@ const GameBoard: React.FC<GameBoardProps> = React.memo(({ setNextTetrominoType, 
     };
 
 
-    const placeTetromino = () => {
+    const placeTetromino = (): void => {
         const tetromino: Tetromino = activeTetromino.current;
         const width: number = tetromino.shape[0].length;
         const height: number = tetromino.shape.length;
@@ -142,7 +142,7 @@ const GameBoard: React.FC<GameBoardProps> = React.memo(({ setNextTetrominoType, 
     };
 
 
-    const canMove = (tetromino: Tetromino, newPosition: Position) => {
+    const canMove = (tetromino: Tetromino, newPosition: Position): boolean => {
         const width: number = tetromino.shape[0].length;
         const height: number = tetromino.shape.length;
         let newY, newX;
@@ -181,7 +181,7 @@ const GameBoard: React.FC<GameBoardProps> = React.memo(({ setNextTetrominoType, 
     };
 
 
-    const clearRows = (rows: number[]) => {
+    const clearRows = (rows: number[]): void => {
         const newGrid: Grid = gridRef.current.map(row => row.map(cell => ({...cell})));
         // 横一列埋まっている列を消して、上に空白列追加する。
         rows.forEach(y => {
@@ -195,7 +195,7 @@ const GameBoard: React.FC<GameBoardProps> = React.memo(({ setNextTetrominoType, 
 
 
     // テトロミノを置いた後のいろいろな処理をする。
-    const handleEndOfTurn = () => {
+    const handleEndOfTurn = (): void => {
         placeTetromino();
         const fullRows: number[] = checkFullRows();
         if (fullRows.length > 0) {
@@ -216,7 +216,7 @@ const GameBoard: React.FC<GameBoardProps> = React.memo(({ setNextTetrominoType, 
     };
 
 
-    const moveTetromino = (direction: string) => {
+    const moveTetromino = (direction: string): void => {
         // positionRef.currentを変数で置いていないのは、
         // 更新ができないから。
         let nextPosition;
@@ -247,7 +247,7 @@ const GameBoard: React.FC<GameBoardProps> = React.memo(({ setNextTetrominoType, 
     };
 
 
-    const rotateTetromino = (direction: string) => {
+    const rotateTetromino = (direction: string): void => {
         const tetromino: Tetromino = activeTetromino.current;
         const width: number = tetromino.shape[0].length;
         const height: number = tetromino.shape.length;
@@ -271,9 +271,9 @@ const GameBoard: React.FC<GameBoardProps> = React.memo(({ setNextTetrominoType, 
         }
 
         const newTetromino: Tetromino = {type: activeTetromino.current.type, shape: rotated};
-        const newPosition: Position|null = calculateSRSPosition(newTetromino, positionRef.current, direction);
+        const newPosition: Position|undefined = calculateSRSPosition(newTetromino, positionRef.current, direction);
         // 回転可能な時の処理
-        if (newPosition !== null) {
+        if (newPosition != null) {
             activeTetromino.current = newTetromino;
             positionRef.current = newPosition;
             if (direction === "left") {
@@ -288,7 +288,7 @@ const GameBoard: React.FC<GameBoardProps> = React.memo(({ setNextTetrominoType, 
     };
 
 
-    const calculateSRSPosition = (tetromino: Tetromino, position: Position, direction: string): Position|null => {
+    const calculateSRSPosition = (tetromino: Tetromino, position: Position, direction: string): Position|undefined => {
         let wallKickRule: number[][] = [];
         let initial: string = "L";
         if (direction === "right") {
@@ -307,11 +307,11 @@ const GameBoard: React.FC<GameBoardProps> = React.memo(({ setNextTetrominoType, 
                 return newPosition;
             }
         }
-        return null;
+        return undefined;
     };
 
 
-    const dropTetromino = () => {
+    const dropTetromino = (): void => {
         const tetromino: Tetromino = activeTetromino.current;
         let newPosition: Position = positionRef.current;
         // 一気に下まで落とす。
@@ -322,7 +322,7 @@ const GameBoard: React.FC<GameBoardProps> = React.memo(({ setNextTetrominoType, 
     };
 
 
-    const checkGameOver = () => {
+    const checkGameOver = (): boolean => {
         const tetromino: Tetromino = activeTetromino.current;
         const width: number = tetromino.shape[0].length;
         const height: number = tetromino.shape.length;
@@ -339,7 +339,7 @@ const GameBoard: React.FC<GameBoardProps> = React.memo(({ setNextTetrominoType, 
     };
 
 
-    const resetGameBoard = () => {
+    const resetGameBoard = (): void => {
         gridRef.current = createGrid();
         setGrid(gridRef.current);
         typesRef.current = [];
@@ -371,18 +371,27 @@ const GameBoard: React.FC<GameBoardProps> = React.memo(({ setNextTetrominoType, 
     useEffect(() => {
         const handleKeyPress = (e: KeyboardEventInit) => {
             if (!existFullRowsRef.current) {
-                if (e.key === "ArrowLeft") {
-                    moveTetromino("left");
-                } else if (e.key === "ArrowRight") {
-                    moveTetromino("right");
-                } else if (e.key === "ArrowDown") {
-                    moveTetromino("down");
-                } else if (e.key === "z") {
-                    rotateTetromino("left");
-                } else if (e.key === "x") {
-                    rotateTetromino("right");
-                } else if (e.key === "ArrowUp") {
-                    dropTetromino();
+                switch (e.key) {
+                    case ("ArrowLeft"):
+                        moveTetromino("left");
+                        break;
+                    case ("ArrowRight"):
+                        moveTetromino("right");
+                        break;
+                    case ("ArrowDown"):
+                        moveTetromino("down");
+                        break;
+                    case ("z"):
+                        rotateTetromino("left");
+                        break;
+                    case ("x"):
+                        rotateTetromino("right");
+                        break;
+                    case ("ArrowUp"):
+                        dropTetromino();
+                        break;
+                    default:
+                        break;
                 }
             }
         }

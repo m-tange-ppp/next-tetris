@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import GameBoard from "./GameBoard";
-import ShowTetromino from "./ShowTetromino";
+import ShowNextTetromino from "./ShowNextTetromino";
 
 
 const TetrisGame: React.FC = () => {
@@ -24,7 +24,7 @@ const TetrisGame: React.FC = () => {
             setNextTetrominoType={setNextTetrominoType} 
             resetGame={resetGame} 
             key={key} />
-            <ShowTetromino nextTetrominoType={nextTetrominoType} />
+            <ShowNextTetromino nextTetrominoType={nextTetrominoType} />
         </div>
     );
 };
