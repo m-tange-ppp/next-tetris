@@ -3,7 +3,7 @@
 import { useState } from "react";
 import GameBoard from "./GameBoard";
 import ShowNextTetromino from "./ShowNextTetromino";
-
+import ScoreBoard from "./ScoreBoard";
 
 const TetrisGame: React.FC = () => {
     // ゲームリセット用のキー
@@ -15,6 +15,7 @@ const TetrisGame: React.FC = () => {
 
     const resetGame = (): void => {
         setKey(prev => prev + 1);
+        setScore(0);
     };
 
 
@@ -22,9 +23,13 @@ const TetrisGame: React.FC = () => {
         <div className="flex gap-4">
             <GameBoard 
             setNextTetrominoType={setNextTetrominoType} 
+            setScore={setScore}
             resetGame={resetGame} 
             key={key} />
-            <ShowNextTetromino nextTetrominoType={nextTetrominoType} />
+            <div>
+                <ScoreBoard score={score} /> 
+                <ShowNextTetromino nextTetrominoType={nextTetrominoType} />
+            </div>
         </div>
     );
 };

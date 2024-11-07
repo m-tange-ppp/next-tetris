@@ -8,12 +8,13 @@ import React from "react";
 
 interface GameBoardProps {
     setNextTetrominoType: React.Dispatch<React.SetStateAction<string|null>>;
+    setScore: React.Dispatch<React.SetStateAction<number>>;
     resetGame: () => void;
     key: number;
 };
 
 
-const GameBoard: React.FC<GameBoardProps> = React.memo(({ setNextTetrominoType, resetGame }) => {
+const GameBoard: React.FC<GameBoardProps> = React.memo(({ setNextTetrominoType, setScore, resetGame }) => {
     const createGrid = (): Grid => {
         return Array(ROWS).fill(null).map(() => Array(COLS).fill({ filled: 0 }))
     };
@@ -234,11 +235,12 @@ const GameBoard: React.FC<GameBoardProps> = React.memo(({ setNextTetrominoType, 
                 positionRef.current = nextPosition;
                 renderTetromino();
             }
-        }else if (direction === "down") {
+        } else if (direction === "down") {
             nextPosition = {x: positionRef.current.x, y: positionRef.current.y + 1};
             if (canMove(activeTetromino.current, nextPosition)) {
                 positionRef.current = nextPosition;
                 renderTetromino();
+                setScore(prev => prev + 2);
             } else {
                 // 下に移動できないときは、そのあとの処理をする。
                 handleEndOfTurn();
@@ -317,6 +319,7 @@ const GameBoard: React.FC<GameBoardProps> = React.memo(({ setNextTetrominoType, 
         // 一気に下まで落とす。
         while (canMove(tetromino, {...newPosition, y: newPosition.y + 1})) {
             newPosition.y ++;
+            setScore(prev => prev + 2);
         }
         renderTetromino();
     };
@@ -437,7 +440,7 @@ const GameBoard: React.FC<GameBoardProps> = React.memo(({ setNextTetrominoType, 
                 </div>
             ))}
         </div>
-    )
+    );
 });
 
 export default GameBoard;

@@ -48,8 +48,8 @@ const ShowNextTetromino: React.FC<GameBoardProps> = ({ nextTetrominoType }) => {
 
 
     return (
-        <div className="">
-            <div className="">
+        <div>
+            <div>
                 <p>NEXT</p>
                 {grid.map((row, rowIndex) => (
                     <div key={rowIndex} className="flex">
@@ -78,7 +78,7 @@ const ShowNextTetromino: React.FC<GameBoardProps> = ({ nextTetrominoType }) => {
                 ))}
             </div>
         </div>
-    )
+    );
 };
 
 

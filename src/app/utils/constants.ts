@@ -4,7 +4,7 @@ import { Tetrominoes } from "./types";
 export const ROWS = 20;
 export const COLS = 10;
 // テトロミノの種類
-export const TYPES = ["I", "O", "T", "L", "J", "S", "Z"];
+export const TYPES = ["I", "O", "T", "L", "J", "S", "Z"] as const;
 
 export const TETROMINOES: Tetrominoes = {
     "I": {type: "I", shape: [
@@ -42,7 +42,7 @@ export const TETROMINOES: Tetrominoes = {
     [1, 1, 0],
     [0, 1, 1],
     ]}
-};
+} as const;
 
 // SRSで用いる。先頭から順に参照して回転可能か判定する。
 export const WALLKICKDATA: {[key: string]: number[][]} = {
@@ -100,4 +100,4 @@ export const WALLKICKDATA: {[key: string]: number[][]} = {
     "IR3": [
     [0, 0], [-2, 0], [1, 0], [1, -2], [-2, 1]
     ], 
-};
+} as const;
