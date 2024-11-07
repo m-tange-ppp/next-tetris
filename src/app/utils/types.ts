@@ -1,5 +1,5 @@
 export interface Cell {
-    filled: number;
+    filled: 0|1;
     type?: string;
     }
 

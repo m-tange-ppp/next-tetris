@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { ROWS, COLS, TETROMINOES, TYPES , WALLKICKDATA} from "../utils/constants";
 import { Grid, Position, Shape, Tetromino } from "../utils/types";
 import React from "react";
+import { count } from "console";
 
 
 interface GameBoardProps {
@@ -85,6 +86,7 @@ const GameBoard: React.FC<GameBoardProps> = React.memo(({ setNextTetrominoType, 
     const gridRef = useRef<Grid>(grid);
     const existFullRowsRef = useRef<boolean>(false);
     const rotationAngleRef = useRef<number>(0);
+    const countComboRef = useRef<number>(0);
 
 
     const initializeNewTetromino = (): void => {
@@ -195,16 +197,71 @@ const GameBoard: React.FC<GameBoardProps> = React.memo(({ setNextTetrominoType, 
     };
 
 
+    const calculateScore = (fullrows: number, clearPerfect: boolean): number => {
+        let add: number = 0;
+        // Tスピンを実装する。
+        // 基本の列消し
+        switch (fullrows) {
+            case 1:
+                add += 100;
+                break;
+            case 2:
+                add += 300;
+                break;
+            case 3:
+                add += 500;
+                break;
+            case 4:
+                add += 800;
+                break;
+        }
+        // 各種全消し
+        if (clearPerfect) {
+            switch (fullrows) {
+                case 1:
+                    add += 800;
+                    break;
+                case 2:
+                    add += 1000;
+                    break;
+                case 3:
+                    add += 1800;
+                    break;
+                case 4:
+                    add += 2000;
+                    break;
+            }
+        }
+        // 連続消し。上限は20コンボ1000点
+        const combo: number = countComboRef.current;
+        add += Math.min(1000, combo * 50);
+        return add;
+    };
+
+
     // テトロミノを置いた後のいろいろな処理をする。
     const handleEndOfTurn = (): void => {
         placeTetromino();
         const fullRows: number[] = checkFullRows();
         if (fullRows.length > 0) {
             clearRows(fullRows);
+
+            let countCell: number = 0;
+            let clearPerfect: boolean = true;
+            gridRef.current.map(rows => rows.map(cell => countCell += cell.filled));
+            if (countCell !== 0) {
+                clearPerfect = false;
+            }
+
+            const add = calculateScore(fullRows.length, clearPerfect);
+
+            setScore(prev => prev + add);
+            countComboRef.current += 1;
             // フラグを立てて、setInterval内の挙動を制限する。
             // できればもっとわかりやすくしたい。
             existFullRowsRef.current = true;
         } else {
+            countComboRef.current = 0;
             initializeNewTetromino();
             if (checkGameOver()) {
                 console.log("over");
@@ -279,10 +336,10 @@ const GameBoard: React.FC<GameBoardProps> = React.memo(({ setNextTetrominoType, 
             activeTetromino.current = newTetromino;
             positionRef.current = newPosition;
             if (direction === "left") {
-                rotationAngleRef.current = (rotationAngleRef.current + 1) % 3;
+                rotationAngleRef.current = (rotationAngleRef.current + 1) % 4;
             } else {
                 // 負にならないように+4している。
-                rotationAngleRef.current = (rotationAngleRef.current - 1 + 4) % 3;
+                rotationAngleRef.current = (rotationAngleRef.current - 1 + 4) % 4;
             }
             renderTetromino();
             return;
@@ -303,8 +360,8 @@ const GameBoard: React.FC<GameBoardProps> = React.memo(({ setNextTetrominoType, 
         }
         // wallKickTypeを先頭から試して、可能であれば回転する。
         for (let i = 0; i < wallKickRule.length; i++) {
-            let div = wallKickRule[i];
-            let newPosition = {x: position.x + div[0], y: position.y + div[1]};
+            const div = wallKickRule[i];
+            const newPosition = {x: position.x + div[0], y: position.y + div[1]};
             if (canMove(tetromino, newPosition)) {
                 return newPosition;
             }
@@ -342,13 +399,13 @@ const GameBoard: React.FC<GameBoardProps> = React.memo(({ setNextTetrominoType, 
     };
 
 
-    const resetGameBoard = (): void => {
-        gridRef.current = createGrid();
-        setGrid(gridRef.current);
-        typesRef.current = [];
-        initializeNewTetromino();
-        renderTetromino();
-    };
+    // const resetGameBoard = (): void => {
+    //     gridRef.current = createGrid();
+    //     setGrid(gridRef.current);
+    //     typesRef.current = [];
+    //     initializeNewTetromino();
+    //     renderTetromino();
+    // };
 
 
     // 基本的なゲームの流れ。
