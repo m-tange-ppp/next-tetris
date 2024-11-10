@@ -11,8 +11,7 @@ interface GameBoardProps {
 };
 
 
-const ShowNextTetromino: React.FC<GameBoardProps> = ({ typesArray }) => {
-    const createGrid = (): Grid => {
+const ShowNextTetromino: React.FC<GameBoardProps> = ({ typesArray }) => {const createGrid = (): Grid => {
         let width: number = 3;
         if (typesArray !== null) {
             width = TETROMINOES[typesArray[typesArray.length - 1]].shape.length;
@@ -41,13 +40,11 @@ const ShowNextTetromino: React.FC<GameBoardProps> = ({ typesArray }) => {
         setGrid(newGrid);
     };
 
-    
+
     useEffect(() => {
         console.log(typesArray);
         renderTetromino();
-        return () => {
-        }
-    }, [typesArray?.length]);
+    }, [typesArray]);
 
 
     return (
