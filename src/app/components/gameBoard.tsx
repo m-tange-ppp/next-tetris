@@ -4,51 +4,50 @@ import { useEffect, useRef, useState } from "react";
 import { ROWS, COLS, TETROMINOES, TYPES , WALLKICKDATA} from "../utils/constants";
 import { Grid, Position, Shape, Tetromino } from "../utils/types";
 import React from "react";
-import { count } from "console";
 
 
 interface GameBoardProps {
-    setNextTetrominoType: React.Dispatch<React.SetStateAction<string|null>>;
+    setTypesArray: React.Dispatch<React.SetStateAction<string[]|null>>;
     setScore: React.Dispatch<React.SetStateAction<number>>;
     resetGame: () => void;
     key: number;
 };
 
 
-const GameBoard: React.FC<GameBoardProps> = React.memo(({ setNextTetrominoType, setScore, resetGame }) => {
+const GameBoard: React.FC<GameBoardProps> = React.memo(({ setTypesArray, setScore, resetGame }) => {
     const createGrid = (): Grid => {
         return Array(ROWS).fill(null).map(() => Array(COLS).fill({ filled: 0 }))
     };
 
 
-    // テトロミノの配列をランダムに初期化して追加する。
-    const initializeTypesArray = (): void => {
-        const newTypes: string[] = [...TYPES];
-        for (let i = TYPES.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [newTypes[i], newTypes[j]] = [newTypes[j], newTypes[i]]
-        }
-        typesRef.current = [...newTypes, ...typesRef.current];
-    };
+            // テトロミノの配列をランダムに初期化して追加する。
+            const addTypesArray = (currentTypes: string[]): string[] => {
+                const newTypes: string[] = [...TYPES];
+                for (let i = TYPES.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [newTypes[i], newTypes[j]] = [newTypes[j], newTypes[i]]
+                }
+                return [...newTypes, ...currentTypes];
+            }; 
 
 
-    // テトロミノの種類を初期化する。
-    const initializeTetrominoType = (): void => {
+    // 次のテトロミノを取得する。
+    const initializeNextTetromino = (): Tetromino => {
         // typesRefを参照渡ししない。
         if (typesRef.current.length < 3) {
-            initializeTypesArray();
+            typesRef.current = addTypesArray(typesRef.current);
         }
 
-        const randomType: string = typesRef.current.pop() as string;
-        const randomTetromino: Tetromino = TETROMINOES[randomType];
+        const nextType: string = typesRef.current.pop() as string;
+        const nextTetromino: Tetromino = TETROMINOES[nextType];
 
         // ディープコピーしてrotateを元の配列に影響させないように。
-        activeTetromino.current = {type: randomTetromino.type, shape: randomTetromino.shape.map(row => [...row])};
+        return {type: nextType, shape: nextTetromino.shape.map(row => [...row])};
     };
 
 
     // テトロミノの種類を考慮して真ん中上のpositionを初期化する。
-    const initializeFirstPosition = (): void => {
+    const initializePosition = (): Position => {
         const tetromino: Tetromino = activeTetromino.current;
         const width: number = tetromino.shape[0].length;
         const center = Math.floor((COLS - width + 1) / 2);
@@ -57,7 +56,7 @@ const GameBoard: React.FC<GameBoardProps> = React.memo(({ setNextTetrominoType, 
         if (tetromino.shape[0].every(cell => cell === 0)) {
             top -= 1;
         }
-        positionRef.current = {x: center, y: top};
+        return {x: center, y: top};
     };
 
 
@@ -69,30 +68,33 @@ const GameBoard: React.FC<GameBoardProps> = React.memo(({ setNextTetrominoType, 
     // レンダリングのたびに関数を呼ばなくてよいように。
     const typesRef = useRef<string[]>(null!);
     if (typesRef.current === null) {
-        typesRef.current = []
-        initializeTypesArray();
+        typesRef.current = addTypesArray([]);
     }
     const activeTetromino = useRef<Tetromino>(null!);
     if (activeTetromino.current === null) {
-        initializeTetrominoType();
+        activeTetromino.current = initializeNextTetromino();
     }
     const positionRef = useRef<Position>(null!);
     if (positionRef.current === null) {
-        initializeFirstPosition();
+        positionRef.current = initializePosition();
     }
 
     // 実際のgridはgridRefに保存する。
     // gridを更新するときに使う。
     const gridRef = useRef<Grid>(grid);
-    const existFullRowsRef = useRef<boolean>(false);
+    const justSettledRef = useRef<boolean>(false);
     const rotationAngleRef = useRef<number>(0);
     const countComboRef = useRef<number>(0);
 
 
     const initializeNewTetromino = (): void => {
-        initializeTetrominoType();
-        initializeFirstPosition();
+        activeTetromino.current = initializeNextTetromino();
+        positionRef.current = initializePosition();
         rotationAngleRef.current = 0;
+        if (checkGameOver()) {
+            console.log("over");
+            resetGame();
+        }
     };
 
 
@@ -142,6 +144,7 @@ const GameBoard: React.FC<GameBoardProps> = React.memo(({ setNextTetrominoType, 
         // gridRefを更新して置いた状態を保存する。
         gridRef.current = newGrid;
         setGrid(newGrid);
+        justSettledRef.current = true;
     };
 
 
@@ -171,7 +174,7 @@ const GameBoard: React.FC<GameBoardProps> = React.memo(({ setNextTetrominoType, 
     };
 
 
-    const checkFullRows = (): number[] => {
+    const findFilledRows = (): number[] => {
         const fullRows: number[] = [];
         const newGrid: Grid = gridRef.current.map(row => row.map(cell => ({...cell})));
         // 横一列が埋まっている列を探して保存する。
@@ -239,38 +242,14 @@ const GameBoard: React.FC<GameBoardProps> = React.memo(({ setNextTetrominoType, 
     };
 
 
-    // テトロミノを置いた後のいろいろな処理をする。
-    const handleEndOfTurn = (): void => {
-        placeTetromino();
-        const fullRows: number[] = checkFullRows();
-        if (fullRows.length > 0) {
-            clearRows(fullRows);
-
-            let countCell: number = 0;
-            let clearPerfect: boolean = true;
-            gridRef.current.map(rows => rows.map(cell => countCell += cell.filled));
-            if (countCell !== 0) {
-                clearPerfect = false;
-            }
-
-            const add = calculateScore(fullRows.length, clearPerfect);
-
-            setScore(prev => prev + add);
-            countComboRef.current += 1;
-            // フラグを立てて、setInterval内の挙動を制限する。
-            // できればもっとわかりやすくしたい。
-            existFullRowsRef.current = true;
-        } else {
-            countComboRef.current = 0;
-            initializeNewTetromino();
-            if (checkGameOver()) {
-                console.log("over");
-                resetGame();
-                // resetGameBoard();
-            } else {
-                renderTetromino();
-            }
+    const checkPerfect = (): boolean => {
+        let countCells: number = 0;
+        let clearPerfect: boolean = true;
+        gridRef.current.map(rows => rows.map(cell => countCells += cell.filled));
+        if (countCells !== 0) {
+            clearPerfect = false;
         }
+        return clearPerfect;
     };
 
 
@@ -370,7 +349,7 @@ const GameBoard: React.FC<GameBoardProps> = React.memo(({ setNextTetrominoType, 
     };
 
 
-    const dropTetromino = (): void => {
+    const dropHardTetromino = (): void => {
         const tetromino: Tetromino = activeTetromino.current;
         let newPosition: Position = positionRef.current;
         // 一気に下まで落とす。
@@ -378,6 +357,7 @@ const GameBoard: React.FC<GameBoardProps> = React.memo(({ setNextTetrominoType, 
             newPosition.y ++;
             setScore(prev => prev + 2);
         }
+        justSettledRef.current = true;
         renderTetromino();
     };
 
@@ -399,13 +379,21 @@ const GameBoard: React.FC<GameBoardProps> = React.memo(({ setNextTetrominoType, 
     };
 
 
-    // const resetGameBoard = (): void => {
-    //     gridRef.current = createGrid();
-    //     setGrid(gridRef.current);
-    //     typesRef.current = [];
-    //     initializeNewTetromino();
-    //     renderTetromino();
-    // };
+    // テトロミノを置いた後のいろいろな処理をする。
+    const handleEndOfTurn = (): void => {
+        placeTetromino();
+        const fullRows: number[] = findFilledRows();
+        if (fullRows.length > 0) {
+            clearRows(fullRows);
+            const add = calculateScore(fullRows.length, checkPerfect());
+            setScore(prev => prev + add);
+            countComboRef.current += 1;
+        } else {
+            countComboRef.current = 0;
+        }
+        initializeNewTetromino();
+        justSettledRef.current = false;
+    };
 
 
     // 基本的なゲームの流れ。
@@ -414,14 +402,12 @@ const GameBoard: React.FC<GameBoardProps> = React.memo(({ setNextTetrominoType, 
         // setInterval内ではgridは更新されない。
         // gridRefを更新することで盤面を保存する。
         const interval: NodeJS.Timeout = setInterval(() => {
-            if (existFullRowsRef.current) {
-                // ライン消去をした後の処理。わかりやすくしたい。
-                initializeNewTetromino();
-                renderTetromino();
-                existFullRowsRef.current = false;
+            if (justSettledRef.current) {
+                handleEndOfTurn();
             } else {
                 moveTetromino("down");
             }
+            renderTetromino();
         }, 500);
         return () => clearInterval(interval);
     }, []);
@@ -430,7 +416,7 @@ const GameBoard: React.FC<GameBoardProps> = React.memo(({ setNextTetrominoType, 
     // キー操作に動きを割り当てる。
     useEffect(() => {
         const handleKeyPress = (e: KeyboardEventInit) => {
-            if (!existFullRowsRef.current) {
+            if (!justSettledRef.current) {
                 switch (e.key) {
                     case ("ArrowLeft"):
                         moveTetromino("left");
@@ -448,7 +434,7 @@ const GameBoard: React.FC<GameBoardProps> = React.memo(({ setNextTetrominoType, 
                         rotateTetromino("right");
                         break;
                     case ("ArrowUp"):
-                        dropTetromino();
+                        dropHardTetromino();
                         break;
                     default:
                         break;
@@ -464,7 +450,8 @@ const GameBoard: React.FC<GameBoardProps> = React.memo(({ setNextTetrominoType, 
 
     // 次のテトロミノをTetrisGameに通知する。
     useEffect(() => {
-        setNextTetrominoType(typesRef.current[typesRef.current.length - 1]);
+        console.log(typesRef.current)
+        setTypesArray(typesRef.current);
     }, [activeTetromino.current.type]);
 
 

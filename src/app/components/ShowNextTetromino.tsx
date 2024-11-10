@@ -3,18 +3,19 @@
 import { useEffect, useState } from "react";
 import { Grid, Tetromino } from "../utils/types";
 import { TETROMINOES } from "../utils/constants";
+import React from "react";
 
 
 interface GameBoardProps {
-    nextTetrominoType: string|null;
+    typesArray: string[]|null;
 };
 
 
-const ShowNextTetromino: React.FC<GameBoardProps> = ({ nextTetrominoType }) => {
+const ShowNextTetromino: React.FC<GameBoardProps> = ({ typesArray }) => {
     const createGrid = (): Grid => {
         let width: number = 3;
-        if (nextTetrominoType !== null) {
-            width = TETROMINOES[nextTetrominoType].shape.length;
+        if (typesArray !== null) {
+            width = TETROMINOES[typesArray[typesArray.length - 1]].shape.length;
         }
         return Array(width).fill(null).map(() => Array(width).fill({ filled: 0 }));
     };
@@ -26,25 +27,27 @@ const ShowNextTetromino: React.FC<GameBoardProps> = ({ nextTetrominoType }) => {
     const renderTetromino = (): void => {
         const newGrid: Grid = createGrid();
         const width: number = newGrid.length;
-        const tetromino: Tetromino = TETROMINOES[nextTetrominoType as string];
+        if (typesArray !== null) {
+            const tetromino: Tetromino = TETROMINOES[typesArray[typesArray.length - 1]];
 
-        for (let i = 0; i < width; i++) {
-            for (let j = 0; j < width; j++) {
-                if (tetromino.shape[i][j]) {
-                    newGrid[i][j] = {filled: 1, type: tetromino.type};
+            for (let i = 0; i < width; i++) {
+                for (let j = 0; j < width; j++) {
+                    if (tetromino.shape[i][j]) {
+                        newGrid[i][j] = {filled: 1, type: tetromino.type};
+                    }
                 }
             }
         }
-
         setGrid(newGrid);
     };
-    
+
     
     useEffect(() => {
-        if (nextTetrominoType !== null) {
-            renderTetromino();
+        console.log(typesArray);
+        renderTetromino();
+        return () => {
         }
-    }, [nextTetrominoType]);
+    }, [typesArray?.length]);
 
 
     return (
