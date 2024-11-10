@@ -21,15 +21,20 @@ const TetrisGame: React.FC = () => {
 
 
     return (
-        <div className="flex gap-4">
+        <div className="flex gap-4 justify-center">
+            <ScoreBoard score={score} /> 
             <GameBoard 
             setTypesArray={setTypesArray} 
             setScore={setScore}
             resetGame={resetGame} 
             key={key} />
             <div>
-                <ScoreBoard score={score} /> 
-                <ShowNextTetromino typesArray={typesArray} />
+                <ShowNextTetromino 
+                typesArray={typesArray} 
+                typesArrayIndex={1} />
+                <ShowNextTetromino 
+                typesArray={typesArray} 
+                typesArrayIndex={2} />
             </div>
         </div>
     );

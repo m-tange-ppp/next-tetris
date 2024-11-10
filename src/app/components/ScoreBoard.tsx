@@ -8,7 +8,7 @@ interface GameBoardProps {
 
 const ScoreBoard: React.FC<GameBoardProps> = ({ score }) => {
     return (
-        <div>
+        <div className="w-24">
             <p>SCORE</p>
             <p>{score}</p>
         </div>

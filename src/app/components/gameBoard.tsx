@@ -39,8 +39,6 @@ const GameBoard: React.FC<GameBoardProps> = React.memo(({ setTypesArray, setScor
         }
 
         const nextType: string = typesRef.current.pop() as string;
-        // ShowNextTetromino側でtypesArrayの変更を検知するためのディープコピー。
-        typesRef.current = typesRef.current.map(type => type);
         const nextTetromino: Tetromino = TETROMINOES[nextType];
 
         // ディープコピーしてrotateを元の配列に影響させないように。
@@ -453,7 +451,8 @@ const GameBoard: React.FC<GameBoardProps> = React.memo(({ setTypesArray, setScor
 
     // 次のテトロミノをTetrisGameに通知する。
     useEffect(() => {
-        console.log(typesRef.current)
+        // ShowNextTetromino側でtypesArrayの変更を検知させるためのディープコピー。
+        typesRef.current = typesRef.current.map(type => type);
         setTypesArray(typesRef.current);
     }, [activeTetromino.current.type]);
 
