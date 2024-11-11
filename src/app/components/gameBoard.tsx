@@ -10,25 +10,27 @@ interface GameBoardProps {
     setTypesArray: React.Dispatch<React.SetStateAction<string[]|null>>;
     setScore: React.Dispatch<React.SetStateAction<number>>;
     resetGame: () => void;
+    setHeldTetrominoType: React.Dispatch<React.SetStateAction<string|null>>;
+    heldTetrominoType: string|null;
     key: number;
 };
 
 
-const GameBoard: React.FC<GameBoardProps> = React.memo(({ setTypesArray, setScore, resetGame }) => {
+const GameBoard: React.FC<GameBoardProps> = React.memo(({ setTypesArray, setScore, resetGame, setHeldTetrominoType, heldTetrominoType }) => {
     const createGrid = (): Grid => {
         return Array(ROWS).fill(null).map(() => Array(COLS).fill({ filled: 0 }))
     };
 
 
-            // テトロミノの配列をランダムに初期化して追加する。
-            const addTypesArray = (currentTypes: string[]): string[] => {
-                const newTypes: string[] = [...TYPES];
-                for (let i = TYPES.length - 1; i > 0; i--) {
-                    const j = Math.floor(Math.random() * (i + 1));
-                    [newTypes[i], newTypes[j]] = [newTypes[j], newTypes[i]]
-                }
-                return [...newTypes, ...currentTypes];
-            }; 
+    // テトロミノの配列をランダムに初期化して追加する。
+    const addTypesArray = (currentTypes: string[]): string[] => {
+        const newTypes: string[] = [...TYPES];
+        for (let i = TYPES.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [newTypes[i], newTypes[j]] = [newTypes[j], newTypes[i]]
+        }
+        return [...newTypes, ...currentTypes];
+    }; 
 
 
     // 次のテトロミノを取得する。
@@ -85,16 +87,13 @@ const GameBoard: React.FC<GameBoardProps> = React.memo(({ setTypesArray, setScor
     const justSettledRef = useRef<boolean>(false);
     const rotationAngleRef = useRef<number>(0);
     const countComboRef = useRef<number>(0);
+    const hasHeldRef = useRef<boolean>(false);
 
 
     const initializeNewTetromino = (): void => {
         activeTetromino.current = initializeNextTetromino();
         positionRef.current = initializePosition();
         rotationAngleRef.current = 0;
-        if (checkGameOver()) {
-            console.log("over");
-            resetGame();
-        }
     };
 
 
@@ -145,6 +144,8 @@ const GameBoard: React.FC<GameBoardProps> = React.memo(({ setTypesArray, setScor
         gridRef.current = newGrid;
         setGrid(newGrid);
         justSettledRef.current = true;
+        // 再びホールドできるようにする。
+        hasHeldRef.current = false;
     };
 
 
@@ -362,6 +363,28 @@ const GameBoard: React.FC<GameBoardProps> = React.memo(({ setTypesArray, setScor
     };
 
 
+    const holdTetromino = (): void => {
+        // 既にホールドしていたら無視。
+        if (hasHeldRef.current) {
+            return;
+        }
+        // ゲーム開始後初回のホールドは次のミノとの交換。
+        if (heldTetrominoType === null) {
+            setHeldTetrominoType(activeTetromino.current.type);
+            initializeNewTetromino();
+            return;
+        }
+        const heldTetromino: Tetromino = TETROMINOES[heldTetrominoType];
+        setHeldTetrominoType(activeTetromino.current.type);
+        // ここから交換したミノの処理。
+        activeTetromino.current =  {type: heldTetromino.type, shape: heldTetromino.shape.map(row => [...row])};
+        positionRef.current = initializePosition();
+        rotationAngleRef.current = 0;
+        hasHeldRef.current = true;
+        renderTetromino();
+    };
+
+
     const checkGameOver = (): boolean => {
         const tetromino: Tetromino = activeTetromino.current;
         const width: number = tetromino.shape[0].length;
@@ -392,6 +415,10 @@ const GameBoard: React.FC<GameBoardProps> = React.memo(({ setTypesArray, setScor
             countComboRef.current = 0;
         }
         initializeNewTetromino();
+        if (checkGameOver()) {
+            console.log("over");
+            resetGame();
+        }
         justSettledRef.current = false;
     };
 
@@ -436,6 +463,9 @@ const GameBoard: React.FC<GameBoardProps> = React.memo(({ setTypesArray, setScor
                         break;
                     case ("ArrowUp"):
                         dropHardTetromino();
+                        break;
+                    case ("c"):
+                        holdTetromino();
                         break;
                     default:
                         break;

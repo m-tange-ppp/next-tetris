@@ -6,17 +6,16 @@ import { TETROMINOES } from "../utils/constants";
 import React from "react";
 
 
-interface ShowNextTetrominoProps {
-    typesArray: string[]|null;
-    typesArrayIndex: number;
+interface ShowHeldTetrominoProps {
+    heldTetrominoType: string|null;
 };
 
 
-const ShowNextTetromino: React.FC<ShowNextTetrominoProps> = ({ typesArray, typesArrayIndex: IndexOfTypesArray }) => {
+const ShowHeldTetromino: React.FC<ShowHeldTetrominoProps> = ({ heldTetrominoType }) => {
     const createGrid = (): Grid => {
         let width: number = 0;
-        if (typesArray != null) {
-            width = TETROMINOES[typesArray[typesArray.length - IndexOfTypesArray]].shape.length;
+        if (heldTetrominoType != null) {
+            width = TETROMINOES[heldTetrominoType].shape.length;
         }
         return Array(width).fill(null).map(() => Array(width).fill({ filled: 0 }));
     };
@@ -28,8 +27,8 @@ const ShowNextTetromino: React.FC<ShowNextTetrominoProps> = ({ typesArray, types
     const renderTetromino = (): void => {
         const newGrid: Grid = createGrid();
         const width: number = newGrid.length;
-        if (typesArray != null) {
-            const tetromino: Tetromino = TETROMINOES[typesArray[typesArray.length - IndexOfTypesArray]];
+        if (heldTetrominoType != null) {
+            const tetromino: Tetromino = TETROMINOES[heldTetrominoType];
 
             for (let i = 0; i < width; i++) {
                 for (let j = 0; j < width; j++) {
@@ -45,12 +44,12 @@ const ShowNextTetromino: React.FC<ShowNextTetrominoProps> = ({ typesArray, types
 
     useEffect(() => {
         renderTetromino();
-    }, [typesArray]);
+    }, [heldTetrominoType]);
 
 
     return (
         <div>
-            <p>↑</p>
+            <p>HOLD</p>
             <div className="w-24 h-24 flex items-center justify-center">
                 <div>
                     {grid.map((row, rowIndex) => (
@@ -85,4 +84,4 @@ const ShowNextTetromino: React.FC<ShowNextTetrominoProps> = ({ typesArray, types
 };
 
 
-export default ShowNextTetromino;
+export default ShowHeldTetromino;
