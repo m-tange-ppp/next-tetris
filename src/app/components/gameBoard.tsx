@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { use, useEffect, useRef, useState } from "react";
 import { ROWS, COLS, TETROMINOES, TYPES , WALLKICKDATA} from "../utils/constants";
 import { Grid, Position, Shape, Tetromino } from "../utils/types";
 import React from "react";
@@ -11,12 +11,14 @@ interface GameBoardProps {
     setScore: React.Dispatch<React.SetStateAction<number>>;
     resetGame: () => void;
     setHeldTetrominoType: React.Dispatch<React.SetStateAction<string|null>>;
+    setLevel: React.Dispatch<React.SetStateAction<number>>;
     heldTetrominoType: string|null;
+    level: number;
     key: number;
 };
 
 
-const GameBoard: React.FC<GameBoardProps> = React.memo(({ setTypesArray, setScore, resetGame, setHeldTetrominoType, heldTetrominoType }) => {
+const GameBoard: React.FC<GameBoardProps> = React.memo(({ setTypesArray, setScore, resetGame, setHeldTetrominoType, setLevel, heldTetrominoType, level }) => {
     const createGrid = (): Grid => {
         return Array(ROWS).fill(null).map(() => Array(COLS).fill({ filled: 0 }))
     };
@@ -88,6 +90,7 @@ const GameBoard: React.FC<GameBoardProps> = React.memo(({ setTypesArray, setScor
     const rotationAngleRef = useRef<number>(0);
     const countComboRef = useRef<number>(0);
     const hasHeldRef = useRef<boolean>(false);
+    const countFullRowsRef = useRef<number>(0);
 
 
     const initializeNewTetromino = (): void => {
@@ -406,11 +409,18 @@ const GameBoard: React.FC<GameBoardProps> = React.memo(({ setTypesArray, setScor
     const handleEndOfTurn = (): void => {
         placeTetromino();
         const fullRows: number[] = findFilledRows();
-        if (fullRows.length > 0) {
+        const numberOfFullRows: number = fullRows.length;
+        if (numberOfFullRows > 0) {
             clearRows(fullRows);
-            const add = calculateScore(fullRows.length, checkPerfect());
+            const add = calculateScore(numberOfFullRows, checkPerfect());
             setScore(prev => prev + add);
             countComboRef.current += 1;
+            // 5ライン消すたびにレベルアップする。
+            countFullRowsRef.current += numberOfFullRows;
+            if (countFullRowsRef.current >= 5) {
+                countFullRowsRef.current = 0;
+                setLevel(prev => prev + 1);
+            }
         } else {
             countComboRef.current = 0;
         }
