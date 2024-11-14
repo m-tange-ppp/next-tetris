@@ -1,7 +1,7 @@
 "use client";
 
 import { use, useEffect, useRef, useState } from "react";
-import { ROWS, COLS, TETROMINOES, TYPES , WALLKICKDATA} from "../utils/constants";
+import { ROWS, COLS, TETROMINOES, TYPES , WALLKICKDATA, LINES_TO_LEVEL_UP, DEFAULT_INTERVAL} from "../utils/constants";
 import { Grid, Position, Shape, Tetromino } from "../utils/types";
 import React from "react";
 
@@ -67,6 +67,7 @@ const GameBoard: React.FC<GameBoardProps> = React.memo(({ setTypesArray, setScor
     // ここからuseState, useRefで定義ゾーン。
     // gridを更新して再レンダリングを促す。
     const [grid, setGrid] = useState<Grid>(() => createGrid());
+    const [hasLanded, setHasLanded] = useState<boolean>(false);
     
     // nullで初期化するuseRefは初回レンダリング時のみ初期化する。
     // レンダリングのたびに関数を呼ばなくてよいように。
@@ -86,7 +87,7 @@ const GameBoard: React.FC<GameBoardProps> = React.memo(({ setTypesArray, setScor
     // 実際のgridはgridRefに保存する。
     // gridを更新するときに使う。
     const gridRef = useRef<Grid>(grid);
-    const justSettledRef = useRef<boolean>(false);
+    const isLockedRef = useRef<boolean>(false);
     const rotationAngleRef = useRef<number>(0);
     const countComboRef = useRef<number>(0);
     const hasHeldRef = useRef<boolean>(false);
@@ -146,7 +147,7 @@ const GameBoard: React.FC<GameBoardProps> = React.memo(({ setTypesArray, setScor
         // gridRefを更新して置いた状態を保存する。
         gridRef.current = newGrid;
         setGrid(newGrid);
-        justSettledRef.current = true;
+        isLockedRef.current = true;
         // 再びホールドできるようにする。
         hasHeldRef.current = false;
     };
@@ -361,7 +362,8 @@ const GameBoard: React.FC<GameBoardProps> = React.memo(({ setTypesArray, setScor
             newPosition.y ++;
             setScore(prev => prev + 2);
         }
-        justSettledRef.current = true;
+        setHasLanded(true);
+        isLockedRef.current = true;
         renderTetromino();
     };
 
@@ -375,6 +377,8 @@ const GameBoard: React.FC<GameBoardProps> = React.memo(({ setTypesArray, setScor
         if (heldTetrominoType === null) {
             setHeldTetrominoType(activeTetromino.current.type);
             initializeNewTetromino();
+            renderTetromino();
+            hasHeldRef.current = true;
             return;
         }
         const heldTetromino: Tetromino = TETROMINOES[heldTetrominoType];
@@ -415,9 +419,9 @@ const GameBoard: React.FC<GameBoardProps> = React.memo(({ setTypesArray, setScor
             const add = calculateScore(numberOfFullRows, checkPerfect());
             setScore(prev => prev + add);
             countComboRef.current += 1;
-            // 5ライン消すたびにレベルアップする。
+            // 指定ライン数を消すたびにレベルアップする。
             countFullRowsRef.current += numberOfFullRows;
-            if (countFullRowsRef.current >= 5) {
+            if (countFullRowsRef.current >= LINES_TO_LEVEL_UP) {
                 countFullRowsRef.current = 0;
                 setLevel(prev => prev + 1);
             }
@@ -429,32 +433,46 @@ const GameBoard: React.FC<GameBoardProps> = React.memo(({ setTypesArray, setScor
             console.log("over");
             resetGame();
         }
-        justSettledRef.current = false;
+        isLockedRef.current = false;
     };
 
 
     // 基本的なゲームの流れ。
     useEffect(() => {
         renderTetromino();
+        // レベルによって動作間隔を変えるが、接地したら固定で。
+        // hasLandedは再レンダリングを促すためにuseStateで。
+        const intervalDuration = hasLanded ? DEFAULT_INTERVAL : Math.max(50, DEFAULT_INTERVAL - (level - 1) * 100);
         // setInterval内ではgridは更新されない。
         // gridRefを更新することで盤面を保存する。
         const interval: NodeJS.Timeout = setInterval(() => {
-            if (justSettledRef.current) {
+            if (isLockedRef.current) {
                 handleEndOfTurn();
             } else {
                 moveTetromino("down");
             }
             renderTetromino();
-        }, 500);
+        }, intervalDuration);
 
         return () => clearInterval(interval);
-    }, []);
+    }, [level, hasLanded]);
+
+
+        // 接地するかどうかを監視する。
+        useEffect(() => {
+            const nextPosition = {x: positionRef.current.x, y: positionRef.current.y + 1};
+            if (canMove(activeTetromino.current, nextPosition)) {
+                setHasLanded(false);
+            } else {
+                setHasLanded(true);
+            }
+        }, [positionRef.current, activeTetromino.current.shape]);
 
 
     // キー操作に動きを割り当てる。
     useEffect(() => {
         const handleKeyPress = (e: KeyboardEventInit) => {
-            if (!justSettledRef.current) {
+            if (!isLockedRef.current) {
                 switch (e.key) {
                     case ("ArrowLeft"):
                         moveTetromino("left");

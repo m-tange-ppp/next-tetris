@@ -101,3 +101,9 @@ export const WALLKICKDATA: {[key: string]: number[][]} = {
     [0, 0], [-1, 0], [2, 0], [-1, 2], [2, -1]
     ], 
 } as const;
+
+// レベルアップに必要なライン数
+export const LINES_TO_LEVEL_UP = 3;
+
+// 初期動作間隔
+export const DEFAULT_INTERVAL = 1000;

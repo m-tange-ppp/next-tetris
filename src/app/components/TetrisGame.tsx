@@ -20,6 +20,7 @@ const TetrisGame: React.FC = () => {
     const resetGame = (): void => {
         setKey(prev => prev + 1);
         setScore(0);
+        setLevel(1);
         setHeldTetrominoType(null);
     };
 
