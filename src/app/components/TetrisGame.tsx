@@ -26,31 +26,34 @@ const TetrisGame: React.FC = () => {
 
 
     return (
-        <div className="flex gap-4 justify-center">
-            <div className=" flex flex-col justify-between">
-                <ShowHeldTetromino heldTetrominoType={heldTetrominoType}/>
+        <div>
+            <div className="flex gap-4 justify-center">
+                <div className=" flex flex-col justify-between">
+                    <ShowHeldTetromino heldTetrominoType={heldTetrominoType}/>
+                    <div>
+                        <LevelBoard level={level} />
+                        <ScoreBoard score={score} /> 
+                    </div>
+                </div>
+                <GameBoard 
+                setTypesArray={setTypesArray} 
+                setScore={setScore}
+                resetGame={resetGame}
+                heldTetrominoType={heldTetrominoType}
+                setHeldTetrominoType={setHeldTetrominoType}
+                level={level}
+                setLevel={setLevel}
+                key={key} />
                 <div>
-                    <LevelBoard level={level} />
-                    <ScoreBoard score={score} /> 
+                    <ShowNextTetromino 
+                    typesArray={typesArray} 
+                    typesArrayIndex={1} />
+                    <ShowNextTetromino 
+                    typesArray={typesArray} 
+                    typesArrayIndex={2} />
                 </div>
             </div>
-            <GameBoard 
-            setTypesArray={setTypesArray} 
-            setScore={setScore}
-            resetGame={resetGame}
-            heldTetrominoType={heldTetrominoType}
-            setHeldTetrominoType={setHeldTetrominoType}
-            level={level}
-            setLevel={setLevel}
-            key={key} />
-            <div>
-                <ShowNextTetromino 
-                typesArray={typesArray} 
-                typesArrayIndex={1} />
-                <ShowNextTetromino 
-                typesArray={typesArray} 
-                typesArrayIndex={2} />
-            </div>
+            <p className=" flex justify-center mt-4">←↓→：移動　↑：落下　zx：回転　c：ホールド</p>
         </div>
     );
 };
