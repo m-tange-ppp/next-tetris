@@ -571,7 +571,8 @@ const GameBoard: React.FC<GameBoardProps> = React.memo(
       return () => {
         window.removeEventListener("keydown", handleKeyPress);
       };
-    }, [isGameOver]); // isGameOverを依存配列に追加
+      // ホールドしたときにレンダリングを促してheldTetrominoTypeを更新する。
+    }, [isGameOver, heldTetrominoType]);
 
     // 次のテトロミノをTetrisGameに通知する。
     useEffect(() => {
@@ -589,27 +590,25 @@ const GameBoard: React.FC<GameBoardProps> = React.memo(
               {row.map((cell, cellIndex) => (
                 <span
                   key={cellIndex}
-                  className={`inline-block w-5 h-5 border ${
-                    cell.filled ? "border-gray-600" : "border-gray-800"
-                  } ${
-                    cell.filled
+                  className={`inline-block w-5 h-5 border ${cell.filled ? "border-gray-600" : "border-gray-800"
+                    } ${cell.filled
                       ? cell.type === "I"
                         ? "bg-cyan-500"
                         : cell.type === "O"
-                        ? "bg-yellow-500"
-                        : cell.type === "T"
-                        ? "bg-purple-500"
-                        : cell.type === "L"
-                        ? "bg-orange-500"
-                        : cell.type === "J"
-                        ? "bg-blue-500"
-                        : cell.type === "S"
-                        ? "bg-lime-500"
-                        : cell.type === "Z"
-                        ? "bg-red-500"
-                        : "bg-gray-700"
+                          ? "bg-yellow-500"
+                          : cell.type === "T"
+                            ? "bg-purple-500"
+                            : cell.type === "L"
+                              ? "bg-orange-500"
+                              : cell.type === "J"
+                                ? "bg-blue-500"
+                                : cell.type === "S"
+                                  ? "bg-lime-500"
+                                  : cell.type === "Z"
+                                    ? "bg-red-500"
+                                    : "bg-gray-700"
                       : "bg-gray-900"
-                  }`}
+                    }`}
                 ></span>
               ))}
             </div>
