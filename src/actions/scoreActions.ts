@@ -2,23 +2,14 @@
 
 import { db } from "@/firebase";
 import {
-  collection,
   addDoc,
-  query,
-  orderBy,
-  limit,
+  collection,
   getDocs,
+  limit,
+  orderBy,
+  query,
   Timestamp,
 } from "firebase/firestore";
-
-const validateAppKey = () => {
-  const expectedKey = process.env.NEXT_PUBLIC_FIREBASE_SECRET_APP_KEY;
-
-  if (expectedKey !== "ejf3erhg8se9rjgirsg") {
-    throw new Error("無効なアプリケーションキーです");
-  }
-  return true;
-};
 
 // スコアデータの型定義を追加
 interface ScoreData {
@@ -30,7 +21,7 @@ interface ScoreData {
 
 // トップスコアを取得する関数を修正
 export async function getTopScores(
-  limitCount: number = 5
+  limitCount: number = 5,
 ): Promise<ScoreData[]> {
   try {
     const scoresRef = collection(db, "scores");
@@ -76,7 +67,7 @@ export async function getScoreRank(currentScore: number) {
     const querySnapshot = await getDocs(q);
 
     const higherScores = querySnapshot.docs.filter(
-      (doc) => doc.data().score > currentScore
+      (doc) => doc.data().score > currentScore,
     );
 
     return {
@@ -92,8 +83,6 @@ export async function getScoreRank(currentScore: number) {
 // スコアを保存する関数
 export async function saveScore(playerName: string, score: number) {
   try {
-    validateAppKey();
-
     const scoresRef = collection(db, "scores");
     const scoreData = {
       playerName,
